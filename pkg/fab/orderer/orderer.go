@@ -165,11 +165,7 @@ func FromOrdererConfig(ordererCfg *fab.OrdererConfig) Option {
 // by name from the apiconfig.Config supplied to the constructor, and then constructs a new orderer from it
 func FromOrdererName(name string) Option {
 	return func(o *Orderer) error {
-		ordererCfg, found, ignoreOrderer := o.config.OrdererConfig(name)
-		if ignoreOrderer {
-			return errors.Errorf("orderer config is ignoring orderer : %s by EntityMatchers", name)
-		}
-
+		ordererCfg, found := o.config.OrdererConfig(name)
 		if !found {
 			return errors.Errorf("orderer config not found for orderer : %s", name)
 		}

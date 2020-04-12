@@ -360,7 +360,7 @@ func InstallChaincode(reqCtx reqContext.Context, req InstallChaincodeRequest, ta
 
 	resp, err := retry.NewInvoker(retry.New(optionsValue.retry)).Invoke(
 		func() (interface{}, error) {
-			return txn.SendProposal(reqCtx, prop, targets)
+			return txn.SendProposal(reqCtx, prop, targets, false,"")
 		},
 	)
 	if err != nil {
@@ -384,14 +384,14 @@ func queryChaincodeWithTarget(reqCtx reqContext.Context, request fab.ChaincodeIn
 		return nil, errors.WithMessage(err, "create transaction ID failed")
 	}
 
-	tp, err := txn.CreateChaincodeInvokeProposal(txh, request)
+	tp, err := txn.CreateChaincodeInvokeProposal(txh, request, false)
 	if err != nil {
 		return nil, errors.WithMessage(err, "NewProposal failed")
 	}
 
 	resp, err := retry.NewInvoker(retry.New(opts.retry)).Invoke(
 		func() (interface{}, error) {
-			return txn.SendProposal(reqCtx, tp, targets)
+			return txn.SendProposal(reqCtx, tp, targets, false,"")
 		},
 	)
 	if err != nil {

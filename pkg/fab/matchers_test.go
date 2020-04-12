@@ -76,17 +76,15 @@ func TestAllOptionsOverride(t *testing.T) {
 	assert.Equal(t, 6, len(peerConfig.GRPCOptions))
 
 	//OrdererConfig Search Based on URL configured in config
-	ordererConfig, ok, ignoreOrderer := config.OrdererConfig("orderer.example.com:7051")
+	ordererConfig, ok := config.OrdererConfig("orderer.example.com:7051")
 	assert.True(t, ok, "supposed to find orderer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, overridedOrdererURL, ordererConfig.URL)
 	assert.Equal(t, overridedOrdererHostNameOverride, ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.Equal(t, 6, len(ordererConfig.GRPCOptions))
 
 	//OrdererConfig Search Based on Name configured in config
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("orderer.example.com")
+	ordererConfig, ok = config.OrdererConfig("orderer.example.com")
 	assert.True(t, ok, "supposed to find orderer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, overridedOrdererURL, ordererConfig.URL)
 	assert.Equal(t, overridedOrdererHostNameOverride, ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.Equal(t, 6, len(ordererConfig.GRPCOptions))
@@ -126,17 +124,15 @@ func TestPartialOptionsOverride(t *testing.T) {
 	assert.Equal(t, 6, len(peerConfig.GRPCOptions))
 
 	//OrdererConfig Search Based on URL configured in config
-	ordererConfig, ok, ignoreOrderer := config.OrdererConfig("orderer.example.com:7051")
+	ordererConfig, ok := config.OrdererConfig("orderer.example.com:7051")
 	assert.True(t, ok, "supposed to find orderer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, overridedOrdererURL, ordererConfig.URL)
 	assert.Equal(t, actualOrdererHostNameOverride, ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.Equal(t, 6, len(ordererConfig.GRPCOptions))
 
 	//OrdererConfig Search Based on Name configured in config
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("orderer.example.com")
+	ordererConfig, ok = config.OrdererConfig("orderer.example.com")
 	assert.True(t, ok, "supposed to find orderer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, overridedOrdererURL, ordererConfig.URL)
 	assert.Equal(t, actualOrdererHostNameOverride, ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.Equal(t, 6, len(ordererConfig.GRPCOptions))
@@ -172,17 +168,15 @@ func TestOnlyHostNameOptionsOverride(t *testing.T) {
 	assert.Equal(t, 6, len(peerConfig.GRPCOptions))
 
 	//OrdererConfig Search Based on URL configured in config
-	ordererConfig, ok, ignoreOrderer := config.OrdererConfig("orderer.example.com:7051")
+	ordererConfig, ok := config.OrdererConfig("orderer.example.com:7051")
 	assert.True(t, ok, "supposed to find orderer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, actualOrdererURL, ordererConfig.URL)
 	assert.Equal(t, overridedOrdererHostNameOverride, ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.Equal(t, 6, len(ordererConfig.GRPCOptions))
 
 	//OrdererConfig Search Based on Name configured in config
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("orderer.example.com")
+	ordererConfig, ok = config.OrdererConfig("orderer.example.com")
 	assert.True(t, ok, "supposed to find orderer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, actualOrdererURL, ordererConfig.URL)
 	assert.Equal(t, overridedOrdererHostNameOverride, ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.Equal(t, 6, len(ordererConfig.GRPCOptions))
@@ -210,9 +204,8 @@ func TestURLMapping(t *testing.T) {
 	assert.Equal(t, 6, len(peerConfig.GRPCOptions))
 
 	//OrdererConfig Search Based on URL configured in config
-	ordererConfig, ok, ignoreOrderer := config.OrdererConfig("my.org.exampleX.com:1234")
+	ordererConfig, ok := config.OrdererConfig("my.org.exampleX.com:1234")
 	assert.True(t, ok, "supposed to find orderer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, overridedOrdererURL, ordererConfig.URL)
 	assert.Equal(t, overridedOrdererHostNameOverride, ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.Equal(t, 6, len(ordererConfig.GRPCOptions))
@@ -231,9 +224,8 @@ func TestURLMapping(t *testing.T) {
 	assert.Equal(t, 6, len(peerConfig.GRPCOptions))
 
 	//OrdererConfig Search Based on URL configured in config (using $ in entity matchers)
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("orderer.exampleY.com:1234")
+	ordererConfig, ok = config.OrdererConfig("orderer.exampleY.com:1234")
 	assert.True(t, ok, "supposed to find orderer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, overridedOrdererURL, ordererConfig.URL)
 	assert.Equal(t, overridedOrdererHostNameOverride, ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.Equal(t, 6, len(ordererConfig.GRPCOptions))
@@ -299,9 +291,8 @@ func TestOrdererMatchersWithDefaults(t *testing.T) {
 	assert.NotNil(t, config)
 
 	//OrdererConfig Search Based on matching URL,
-	ordererConfig, ok, ignoreOrderer := config.OrdererConfig("XYZ.org.example.com:1234")
+	ordererConfig, ok := config.OrdererConfig("XYZ.org.example.com:1234")
 	assert.True(t, ok, "supposed to find orderer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, overridedOrdererURL, ordererConfig.URL)
 	assert.Equal(t, overridedOrdererHostNameOverride, ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.NotNil(t, ordererConfig.TLSCACert)
@@ -309,9 +300,8 @@ func TestOrdererMatchersWithDefaults(t *testing.T) {
 
 	//PeerConfig Search Based on matching URL, using regex replace pattern (unknown pattern)
 	//it shouldn't fail since default peer config will be picked for unknown mapped host
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("ordABC.replace.example.com:1234")
+	ordererConfig, ok = config.OrdererConfig("ordABC.replace.example.com:1234")
 	assert.True(t, ok, "supposed to find orderer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, "ordABC.example.com:1234", ordererConfig.URL)
 	assert.Equal(t, "ordABC.override.com", ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.NotNil(t, ordererConfig.TLSCACert)
@@ -319,9 +309,8 @@ func TestOrdererMatchersWithDefaults(t *testing.T) {
 
 	//PeerConfig Search Based on matching URL, where mapped host is missing
 	//it shouldn't fail since default peer config will be picked for unknown mapped host
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("ordABC.missing.example.com:1234")
+	ordererConfig, ok = config.OrdererConfig("ordABC.missing.example.com:1234")
 	assert.True(t, ok, "supposed to find orderer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, overridedOrdererURL, ordererConfig.URL)
 	assert.Equal(t, overridedOrdererHostNameOverride, ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.NotNil(t, ordererConfig.TLSCACert)
@@ -329,9 +318,8 @@ func TestOrdererMatchersWithDefaults(t *testing.T) {
 
 	//PeerConfig Search Based on matching URL, where non existing mapped host is used
 	//it shouldn't fail since default peer config will be picked for unknown mapped host
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("ordABC.random.example.com:1234")
+	ordererConfig, ok = config.OrdererConfig("ordABC.random.example.com:1234")
 	assert.True(t, ok, "supposed to find orderer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, overridedOrdererURL, ordererConfig.URL)
 	assert.Equal(t, overridedOrdererHostNameOverride, ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.NotNil(t, ordererConfig.TLSCACert)
@@ -430,9 +418,8 @@ func TestDefaultOrdererForNonExistingURL(t *testing.T) {
 	assert.NotNil(t, config)
 
 	//PeerConfig Search Based on unmatched URL, default peerconfig with searchkey as URL should be returned
-	ordererConfig, ok, ignoreOrderer := config.OrdererConfig("ABC.XYZ:2222")
+	ordererConfig, ok := config.OrdererConfig("ABC.XYZ:2222")
 	assert.True(t, ok, "supposed to find peer config")
-	assert.False(t, ignoreOrderer, "orderer must not be ignored")
 	assert.Equal(t, "ABC.XYZ:2222", ordererConfig.URL)
 	assert.Equal(t, nil, ordererConfig.GRPCOptions["ssl-target-name-override"])
 	assert.NotNil(t, ordererConfig.TLSCACert)
@@ -605,47 +592,39 @@ func testIgnoreEndpointOrdererSearch(t *testing.T, config fab.EndpointConfig) {
 
 	//Test if orderer excluded in orderer search by name
 
-	ordererConfig, ok, ignoreOrderer:= config.OrdererConfig("orderer.exclude.example.com")
+	ordererConfig, ok := config.OrdererConfig("orderer.exclude.example.com")
 	assert.False(t, ok)
-	assert.True(t, ignoreOrderer, "orderer must be excluded")
 	assert.Nil(t, ordererConfig)
 
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("orderer.exclude.example.com")
+	ordererConfig, ok = config.OrdererConfig("orderer.exclude.example.com")
 	assert.False(t, ok)
-	assert.True(t, ignoreOrderer, "orderer must be excluded")
 	assert.Nil(t, ordererConfig)
 
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("orderer.example.com")
+	ordererConfig, ok = config.OrdererConfig("orderer.example.com")
 	assert.True(t, ok)
-	assert.False(t, ignoreOrderer, "orderer must not be excluded")
 	assert.NotNil(t, ordererConfig)
 
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("orderer.example.com")
+	ordererConfig, ok = config.OrdererConfig("orderer.example.com")
 	assert.True(t, ok)
-	assert.False(t, ignoreOrderer, "orderer must not be excluded")
 	assert.NotNil(t, ordererConfig)
 
 	//Test if orderer excluded in orderer search by URL
 
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("orderer.exclude.example.com:8050")
+	ordererConfig, ok = config.OrdererConfig("orderer.exclude.example.com:8050")
 	assert.False(t, ok)
-	assert.True(t, ignoreOrderer, "orderer must be excluded")
 	assert.Nil(t, ordererConfig)
 
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("orderer.exclude.example.com:8050")
+	ordererConfig, ok = config.OrdererConfig("orderer.exclude.example.com:8050")
 	assert.False(t, ok)
-	assert.True(t, ignoreOrderer, "orderer must be excluded")
 	assert.Nil(t, ordererConfig)
 
 	//arbitrary URLs
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("orderer.exclude.example.com:1234")
+	ordererConfig, ok = config.OrdererConfig("orderer.exclude.example.com:1234")
 	assert.False(t, ok)
-	assert.True(t, ignoreOrderer, "orderer must be excluded")
 	assert.Nil(t, ordererConfig)
 
-	ordererConfig, ok, ignoreOrderer = config.OrdererConfig("orderer.exclude.example.com:4321")
+	ordererConfig, ok = config.OrdererConfig("orderer.exclude.example.com:4321")
 	assert.False(t, ok)
-	assert.True(t, ignoreOrderer, "orderer must be excluded")
 	assert.Nil(t, ordererConfig)
 
 }

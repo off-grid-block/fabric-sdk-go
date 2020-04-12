@@ -8,8 +8,7 @@ version: '2.1'
 services:
 
   integration-tests:
-    # TODO: parameterize golang version
-    image: golang:1.13
+    image: ${FABRIC_BASE_DOCKER_REGISTRY}${FABRIC_BASEIMAGE_FIXTURE_IMAGE}:${FABRIC_ARCH}${FABRIC_ARCH_SEP}${FABRIC_BASEIMAGE_FIXTURE_TAG}
     environment:
       - GO_TAGS
       - GO_TESTFLAGS

@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	pb "github.com/hyperledger/fabric-protos-go/peer"
+	cb "github.com/hyperledger/fabric-protos-go/common"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	mspclient "github.com/hyperledger/fabric-sdk-go/pkg/client/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
@@ -164,19 +164,7 @@ func (setup *BaseSetupImpl) Initialize(sdk *fabsdk.FabricSDK) error {
 
 // GetDeployPath returns the path to the chaincode fixtures
 func GetDeployPath() string {
-	const ccPath = "test/fixtures/testdata/go"
-	return filepath.Join(metadata.GetProjectPath(), ccPath)
-}
-
-// GetJavaDeployPath returns the path to the java chaincode fixtrues
-func GetJavaDeployPath() string {
-	const ccPath = "test/fixtures/testdata/java"
-	return filepath.Join(metadata.GetProjectPath(), ccPath)
-}
-
-// GetNodeDeployPath returns the path to the node chaincode fixtrues
-func GetNodeDeployPath() string {
-	const ccPath = "test/fixtures/testdata/node"
+	const ccPath = "test/fixtures/testdata"
 	return filepath.Join(metadata.GetProjectPath(), ccPath)
 }
 
@@ -306,7 +294,7 @@ func InstallChaincode(resMgmt *resmgmt.Client, ccPkg *resource.CCPackage, ccPath
 }
 
 // InstantiateChaincode instantiates the given chaincode to the given channel
-func InstantiateChaincode(resMgmt *resmgmt.Client, channelID, ccName, ccPath, ccVersion string, ccPolicyStr string, args [][]byte, collConfigs ...*pb.CollectionConfig) (resmgmt.InstantiateCCResponse, error) {
+func InstantiateChaincode(resMgmt *resmgmt.Client, channelID, ccName, ccPath, ccVersion string, ccPolicyStr string, args [][]byte, collConfigs ...*cb.CollectionConfig) (resmgmt.InstantiateCCResponse, error) {
 	ccPolicy, err := cauthdsl.FromString(ccPolicyStr)
 	if err != nil {
 		return resmgmt.InstantiateCCResponse{}, errors.Wrapf(err, "error creating CC policy [%s]", ccPolicyStr)
@@ -318,50 +306,6 @@ func InstantiateChaincode(resMgmt *resmgmt.Client, channelID, ccName, ccPath, cc
 			Name:       ccName,
 			Path:       ccPath,
 			Version:    ccVersion,
-			Args:       args,
-			Policy:     ccPolicy,
-			CollConfig: collConfigs,
-		},
-		resmgmt.WithRetry(retry.DefaultResMgmtOpts),
-	)
-}
-
-// InstantiateJavaChaincode instantiates the given java chaincode to the given channel
-func InstantiateJavaChaincode(resMgmt *resmgmt.Client, channelID, ccName, ccPath, ccVersion string, ccPolicyStr string, args [][]byte, collConfigs ...*pb.CollectionConfig) (resmgmt.InstantiateCCResponse, error) {
-	ccPolicy, err := cauthdsl.FromString(ccPolicyStr)
-	if err != nil {
-		return resmgmt.InstantiateCCResponse{}, errors.Wrapf(err, "error creating CC policy [%s]", ccPolicyStr)
-	}
-
-	return resMgmt.InstantiateCC(
-		channelID,
-		resmgmt.InstantiateCCRequest{
-			Name:       ccName,
-			Path:       ccPath,
-			Version:    ccVersion,
-			Lang:       pb.ChaincodeSpec_JAVA,
-			Args:       args,
-			Policy:     ccPolicy,
-			CollConfig: collConfigs,
-		},
-		resmgmt.WithRetry(retry.DefaultResMgmtOpts),
-	)
-}
-
-// InstantiateNodeChaincode instantiates the given node chaincode to the given channel
-func InstantiateNodeChaincode(resMgmt *resmgmt.Client, channelID, ccName, ccPath, ccVersion string, ccPolicyStr string, args [][]byte, collConfigs ...*pb.CollectionConfig) (resmgmt.InstantiateCCResponse, error) {
-	ccPolicy, err := cauthdsl.FromString(ccPolicyStr)
-	if err != nil {
-		return resmgmt.InstantiateCCResponse{}, errors.Wrapf(err, "error creating CC policy [%s]", ccPolicyStr)
-	}
-
-	return resMgmt.InstantiateCC(
-		channelID,
-		resmgmt.InstantiateCCRequest{
-			Name:       ccName,
-			Path:       ccPath,
-			Version:    ccVersion,
-			Lang:       pb.ChaincodeSpec_NODE,
 			Args:       args,
 			Policy:     ccPolicy,
 			CollConfig: collConfigs,
@@ -371,7 +315,7 @@ func InstantiateNodeChaincode(resMgmt *resmgmt.Client, channelID, ccName, ccPath
 }
 
 // UpgradeChaincode upgrades the given chaincode on the given channel
-func UpgradeChaincode(resMgmt *resmgmt.Client, channelID, ccName, ccPath, ccVersion string, ccPolicyStr string, args [][]byte, collConfigs ...*pb.CollectionConfig) (resmgmt.UpgradeCCResponse, error) {
+func UpgradeChaincode(resMgmt *resmgmt.Client, channelID, ccName, ccPath, ccVersion string, ccPolicyStr string, args [][]byte, collConfigs ...*cb.CollectionConfig) (resmgmt.UpgradeCCResponse, error) {
 	ccPolicy, err := cauthdsl.FromString(ccPolicyStr)
 	if err != nil {
 		return resmgmt.UpgradeCCResponse{}, errors.Wrapf(err, "error creating CC policy [%s]", ccPolicyStr)
@@ -383,50 +327,6 @@ func UpgradeChaincode(resMgmt *resmgmt.Client, channelID, ccName, ccPath, ccVers
 			Name:       ccName,
 			Path:       ccPath,
 			Version:    ccVersion,
-			Args:       args,
-			Policy:     ccPolicy,
-			CollConfig: collConfigs,
-		},
-		resmgmt.WithRetry(retry.DefaultResMgmtOpts),
-	)
-}
-
-// UpgradeJavaChaincode upgrades the given java chaincode on the given channel
-func UpgradeJavaChaincode(resMgmt *resmgmt.Client, channelID, ccName, ccPath, ccVersion string, ccPolicyStr string, args [][]byte, collConfigs ...*pb.CollectionConfig) (resmgmt.UpgradeCCResponse, error) {
-	ccPolicy, err := cauthdsl.FromString(ccPolicyStr)
-	if err != nil {
-		return resmgmt.UpgradeCCResponse{}, errors.Wrapf(err, "error creating CC policy [%s]", ccPolicyStr)
-	}
-
-	return resMgmt.UpgradeCC(
-		channelID,
-		resmgmt.UpgradeCCRequest{
-			Name:       ccName,
-			Path:       ccPath,
-			Version:    ccVersion,
-			Lang:       pb.ChaincodeSpec_JAVA,
-			Args:       args,
-			Policy:     ccPolicy,
-			CollConfig: collConfigs,
-		},
-		resmgmt.WithRetry(retry.DefaultResMgmtOpts),
-	)
-}
-
-// UpgradeNodeChaincode upgrades the given node chaincode on the given channel
-func UpgradeNodeChaincode(resMgmt *resmgmt.Client, channelID, ccName, ccPath, ccVersion string, ccPolicyStr string, args [][]byte, collConfigs ...*pb.CollectionConfig) (resmgmt.UpgradeCCResponse, error) {
-	ccPolicy, err := cauthdsl.FromString(ccPolicyStr)
-	if err != nil {
-		return resmgmt.UpgradeCCResponse{}, errors.Wrapf(err, "error creating CC policy [%s]", ccPolicyStr)
-	}
-
-	return resMgmt.UpgradeCC(
-		channelID,
-		resmgmt.UpgradeCCRequest{
-			Name:       ccName,
-			Path:       ccPath,
-			Version:    ccVersion,
-			Lang:       pb.ChaincodeSpec_NODE,
 			Args:       args,
 			Policy:     ccPolicy,
 			CollConfig: collConfigs,

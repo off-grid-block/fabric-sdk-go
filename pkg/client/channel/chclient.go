@@ -17,8 +17,8 @@ package channel
 
 import (
 	reqContext "context"
+	"fmt"
 	"time"
-
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/discovery/greylist"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/filter"
@@ -61,7 +61,6 @@ func New(channelProvider context.ChannelProvider, opts ...ClientOption) (*Client
 	if channelContext.ChannelService() == nil {
 		return nil, errors.New("channel service not initialized")
 	}
-
 	eventService, err := channelContext.ChannelService().EventService()
 	if err != nil {
 		return nil, errors.WithMessage(err, "event service creation failed")
@@ -80,7 +79,6 @@ func New(channelProvider context.ChannelProvider, opts ...ClientOption) (*Client
 			return nil, errors.WithMessage(err, "option failed")
 		}
 	}
-
 	return &channelClient, nil
 }
 
@@ -92,7 +90,6 @@ func New(channelProvider context.ChannelProvider, opts ...ClientOption) (*Client
 //  Returns:
 //  the proposal responses from peer(s)
 func (cc *Client) Query(request Request, options ...RequestOption) (Response, error) {
-
 	options = append(options, addDefaultTimeout(fab.Query))
 	options = append(options, addDefaultTargetFilter(cc.context, filter.ChaincodeQuery))
 
@@ -166,7 +163,7 @@ func (cc *Client) InvokeHandler(handler invoke.Handler, request Request, options
 				}
 
 				cc.greylist.Greylist(err)
-
+				fmt.Println("retrying")
 				// Reset context parameters
 				requestContext.Opts.Targets = txnOpts.Targets
 				requestContext.Error = nil

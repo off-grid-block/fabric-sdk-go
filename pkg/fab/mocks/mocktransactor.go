@@ -36,6 +36,16 @@ func (t *MockTransactor) SendTransactionProposal(proposal *fab.TransactionPropos
 	return response, nil
 }
 
+// SendTransactionProposal sends a TransactionProposal to the target peers through indy
+func (t *MockTransactor) SendTransactionProposalIndy(proposal *fab.TransactionProposal, targets []fab.ProposalProcessor, indyFlag bool,did string) ([]*fab.TransactionProposalResponse, error) {
+	response := make([]*fab.TransactionProposalResponse, 1)
+	response[0] = &fab.TransactionProposalResponse{Endorser: "example.com", Status: 200,
+		ProposalResponse: &pb.ProposalResponse{Response: &pb.Response{Message: "success", Payload: []byte("abc"), Status: http.StatusOK},
+			Endorsement: &pb.Endorsement{Endorser: []byte("example.com"), Signature: []byte("signature")}},
+	}
+	return response, nil
+}
+
 // CreateTransaction create a transaction with proposal response.
 func (t *MockTransactor) CreateTransaction(request fab.TransactionRequest) (*fab.Transaction, error) {
 	response := &fab.Transaction{

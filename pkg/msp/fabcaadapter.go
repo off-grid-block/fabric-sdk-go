@@ -65,10 +65,9 @@ func (c *fabricCAAdapter) Enroll(request *api.EnrollmentRequest) ([]byte, error)
 		}
 		careq.AttrReqs = attrs
 	}
-
-	caresp, err := c.caClient.Enroll(careq)
+	caresp, err := c.caClient.Enroll(careq) 
 	if err != nil {
-		return nil, errors.WithMessage(err, "enroll failed")
+		return nil, errors.WithMessage(err, "enroll failed1")
 	}
 	return caresp.Identity.GetECert().Cert(), nil
 }

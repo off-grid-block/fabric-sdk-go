@@ -42,21 +42,17 @@ type DeliverConnection struct {
 }
 
 // StreamProvider creates a deliver stream
-type StreamProvider func(pb.DeliverClient) (stream deliverStream, cancel func(), err error)
+type StreamProvider func(pb.DeliverClient) (deliverStream, error)
 
 var (
 	// Deliver creates a Deliver stream
-	Deliver = func(client pb.DeliverClient) (deliverStream, func(), error) {
-		ctx, cancel := context.WithCancel(context.Background())
-		stream, err := client.Deliver(ctx)
-		return stream, cancel, err
+	Deliver = func(client pb.DeliverClient) (deliverStream, error) {
+		return client.Deliver(context.Background())
 	}
 
 	// DeliverFiltered creates a DeliverFiltered stream
-	DeliverFiltered = func(client pb.DeliverClient) (deliverStream, func(), error) {
-		ctx, cancel := context.WithCancel(context.Background())
-		stream, err := client.DeliverFiltered(ctx)
-		return stream, cancel, err
+	DeliverFiltered = func(client pb.DeliverClient) (deliverStream, error) {
+		return client.DeliverFiltered(context.Background())
 	}
 )
 
@@ -65,7 +61,7 @@ func New(ctx fabcontext.Client, chConfig fab.ChannelCfg, streamProvider StreamPr
 	logger.Debugf("Connecting to %s...", url)
 	connect, err := comm.NewStreamConnection(
 		ctx, chConfig,
-		func(grpcconn *grpc.ClientConn) (grpc.ClientStream, func(), error) {
+		func(grpcconn *grpc.ClientConn) (grpc.ClientStream, error) {
 			return streamProvider(pb.NewDeliverClient(grpcconn))
 		},
 		url, opts...,
@@ -164,21 +160,39 @@ func (c *DeliverConnection) createSignedEnvelope(msg proto.Message) (*cb.Envelop
 	if err != nil {
 		return nil, err
 	}
-
-	payloadSignatureHeader := &cb.SignatureHeader{
-		Creator: identity,
-		Nonce:   nonce,
+    // 
+	payloadSignatureHeader := &cb.SignatureHeader{}
+	did :=c.Context().EnrollmentCertificate()	
+	if len(did)<25{
+		payloadSignatureHeader = &cb.SignatureHeader{
+			Creator: identity,
+			Nonce:   nonce,
+			Did:	 did,
+		}
+	}else{
+		payloadSignatureHeader = &cb.SignatureHeader{
+			Creator: identity,
+			Nonce:   nonce,
+			Did:	 nil,
+		}
 	}
 
 	paylBytes := protoutil.MarshalOrPanic(&cb.Payload{
 		Header: protoutil.MakePayloadHeader(payloadChannelHeader, payloadSignatureHeader),
 		Data:   data,
 	})
-
-	signature, err := c.Context().SigningManager().Sign(paylBytes, c.Context().PrivateKey())
+var signature []byte
+if len(did) <30{
+	signature, err = c.Context().SigningManager().Sign(paylBytes,  c.Context().PrivateKey(), true,string(did))
+        if err != nil {
+                return nil, err
+        }
+}else{
+	signature, err = c.Context().SigningManager().Sign(paylBytes, c.Context().PrivateKey(), false,"")
 	if err != nil {
 		return nil, err
 	}
+}
 
 	return &cb.Envelope{Payload: paylBytes, Signature: signature}, nil
 }

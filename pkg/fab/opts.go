@@ -49,7 +49,7 @@ type orderersConfig interface {
 
 // ordererConfig interface allows to uniquely override EndpointConfig interface's OrdererConfig() function
 type ordererConfig interface {
-	OrdererConfig(name string) (*fab.OrdererConfig, bool, bool)
+	OrdererConfig(name string) (*fab.OrdererConfig, bool)
 }
 
 // peersConfig interface allows to uniquely override EndpointConfig interface's PeersConfig() function

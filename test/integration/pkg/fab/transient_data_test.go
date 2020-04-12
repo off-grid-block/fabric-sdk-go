@@ -96,7 +96,7 @@ func createAndSendTransactionProposal(transactor fab.ProposalSender, chainCodeID
 				return nil, errors.WithMessage(err, "creating transaction header failed")
 			}
 
-			tp, err := txn.CreateChaincodeInvokeProposal(txh, propReq)
+			tp, err := txn.CreateChaincodeInvokeProposal(txh, propReq, false)
 			if err != nil {
 				return nil, errors.WithMessage(err, "creating transaction proposal failed")
 			}

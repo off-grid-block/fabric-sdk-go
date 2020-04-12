@@ -9,6 +9,7 @@ package pkcs11
 import (
 	"bytes"
 	"crypto/sha256"
+	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -53,6 +54,7 @@ func TestCryptoSuiteByConfigPKCS11(t *testing.T) {
 	mockConfig.EXPECT().SecurityProvider().Return("pkcs11")
 	mockConfig.EXPECT().SecurityAlgorithm().Return("SHA2")
 	mockConfig.EXPECT().SecurityLevel().Return(256)
+	mockConfig.EXPECT().KeyStorePath().Return("/tmp/msp")
 	mockConfig.EXPECT().SecurityProviderLibPath().Return(providerLib)
 	mockConfig.EXPECT().SecurityProviderLabel().Return(softHSMTokenLabel)
 	mockConfig.EXPECT().SecurityProviderPin().Return(softHSMPin)
@@ -77,6 +79,7 @@ func TestCryptoSuiteByConfigPKCS11Failure(t *testing.T) {
 	mockConfig.EXPECT().SecurityProvider().Return("pkcs11")
 	mockConfig.EXPECT().SecurityAlgorithm().Return("SHA2")
 	mockConfig.EXPECT().SecurityLevel().Return(256)
+	mockConfig.EXPECT().KeyStorePath().Return("/tmp/msp")
 	mockConfig.EXPECT().SecurityProviderLibPath().Return("")
 	mockConfig.EXPECT().SecurityProviderLabel().Return("")
 	mockConfig.EXPECT().SecurityProviderPin().Return("")
@@ -140,14 +143,16 @@ func TestPKCS11CSPConfigWithEmptyProviderName(t *testing.T) {
 func configurePKCS11Options(hashFamily string, securityLevel int) *pkcs11.PKCS11Opts {
 	providerLib, softHSMPin, softHSMTokenLabel := pkcs11.FindPKCS11Lib()
 
+	pkks := pkcs11.FileKeystoreOpts{KeyStorePath: os.TempDir()}
 	//PKCS11 options
 	pkcsOpt := pkcs11.PKCS11Opts{
-		SecLevel:   securityLevel,
-		HashFamily: hashFamily,
-		Library:    providerLib,
-		Pin:        softHSMPin,
-		Label:      softHSMTokenLabel,
-		Ephemeral:  false,
+		SecLevel:     securityLevel,
+		HashFamily:   hashFamily,
+		FileKeystore: &pkks,
+		Library:      providerLib,
+		Pin:          softHSMPin,
+		Label:        softHSMTokenLabel,
+		Ephemeral:    false,
 	}
 
 	return &pkcsOpt

@@ -89,11 +89,7 @@ func WithOrdererEndpoint(key string) RequestOption {
 
 	return func(ctx context.Client, opts *requestOptions) error {
 
-		ordererCfg, found, ignoreOrderer := ctx.EndpointConfig().OrdererConfig(key)
-		if ignoreOrderer {
-			return errors.Errorf("orderer url : %s is explicitly ignored by EntityMatchers config - can't add orderer", key)
-		}
-
+		ordererCfg, found := ctx.EndpointConfig().OrdererConfig(key)
 		if !found {
 			return errors.Errorf("orderer not found for url : %s", key)
 		}

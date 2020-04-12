@@ -7,7 +7,9 @@ SPDX-License-Identifier: Apache-2.0
 package msp
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
@@ -134,17 +136,27 @@ func (c *CAClientImpl) Enroll(request *api.EnrollmentRequest) error {
 	if request.Secret == "" {
 		return errors.New("enrollmentSecret is required")
 	}
-	// TODO add attributes
-	cert, err := c.adapter.Enroll(request)
-	if err != nil {
-		return errors.Wrap(err, "enroll failed")
-	}
+	var result map[string]interface{}
+	//Indy part
+	url := "http://10.53.17.40:8008/get_signing_did"
+
+	req, _ := http.NewRequest("GET", url, nil)
+
+	req.Header.Add("content-type", "text/plain")
+
+	res, _ := http.DefaultClient.Do(req)
+
+	json.NewDecoder(res.Body).Decode(&result)
+
+	defer res.Body.Close()
+
+	new_did := fmt.Sprintf("%v", result["signing_did"])
 	userData := &msp.UserData{
-		MSPID:                 c.orgMSPID,
+		MSPID:                 "org1.hf.sample.io",
 		ID:                    request.Name,
-		EnrollmentCertificate: cert,
+		EnrollmentCertificate: []byte(new_did),
 	}
-	err = c.userStore.Store(userData)
+	err := c.userStore.Store(userData)
 	if err != nil {
 		return errors.Wrap(err, "enroll failed")
 	}
@@ -333,18 +345,16 @@ func (c *CAClientImpl) Register(request *api.RegistrationRequest) (string, error
 	if request.Name == "" {
 		return "", errors.New("request.Name is required")
 	}
-
-	registrar, err := c.getRegistrar(c.registrar.EnrollID, c.registrar.EnrollSecret)
+	_, err := c.getRegistrar(request.Name, request.Secret)
 	if err != nil {
 		return "", err
 	}
+	// secret, err := c.adapter.Register(registrar.PrivateKey(), registrar.EnrollmentCertificate(), request)
+	// if err != nil {
+	// 	return "", errors.Wrap(err, "failed to register user")
+	// }
 
-	secret, err := c.adapter.Register(registrar.PrivateKey(), registrar.EnrollmentCertificate(), request)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to register user")
-	}
-
-	return secret, nil
+	return "secret", nil
 }
 
 // Revoke a User with the Fabric CA
@@ -491,7 +501,7 @@ func (c *CAClientImpl) getRegistrar(enrollID string, enrollSecret string) (msp.S
 		return nil, api.ErrCARegistrarNotFound
 	}
 
-	registrar, err := c.identityManager.GetSigningIdentity(enrollID)
+	_, err := c.identityManager.GetSigningIdentity(enrollID)
 	if err != nil {
 		if err != msp.ErrUserNotFound {
 			return nil, err
@@ -505,10 +515,10 @@ func (c *CAClientImpl) getRegistrar(enrollID string, enrollSecret string) (msp.S
 		if err != nil {
 			return nil, err
 		}
-		registrar, err = c.identityManager.GetSigningIdentity(enrollID)
-		if err != nil {
-			return nil, err
-		}
+		// registrar, err = c.identityManager.GetSigningIdentity(enrollID)
+		// if err != nil {
+		// 	return nil, err
+		// }
 	}
-	return registrar, nil
+	return nil, nil
 }

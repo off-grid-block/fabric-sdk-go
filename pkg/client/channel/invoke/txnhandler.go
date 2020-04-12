@@ -282,18 +282,20 @@ func createAndSendTransactionProposal(transactor fab.ProposalSender, chrequest *
 		Args:         chrequest.Args,
 		TransientMap: chrequest.TransientMap,
 	}
+	indyFlag := true
 
 	txh, err := transactor.CreateTransactionHeader(opts...)
 	if err != nil {
 		return nil, nil, errors.WithMessage(err, "creating transaction header failed")
 	}
-
-	proposal, err := txn.CreateChaincodeInvokeProposal(txh, request)
+	proposal, err := txn.CreateChaincodeInvokeProposal(txh, request, indyFlag)
 	if err != nil {
 		return nil, nil, errors.WithMessage(err, "creating transaction proposal failed")
 	}
 
-	transactionProposalResponses, err := transactor.SendTransactionProposal(proposal, targets)
+	//Indy Transaction proposal calling
+	did := txh.Did()
+	transactionProposalResponses, err := transactor.SendTransactionProposalIndy(proposal, targets, indyFlag, did)
 
 	return transactionProposalResponses, proposal, err
 }

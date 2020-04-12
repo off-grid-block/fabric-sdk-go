@@ -276,10 +276,12 @@ func (c *Client) handleX509Enroll(req *api.EnrollmentRequest) (*EnrollmentRespon
 	reqNet.SignRequest.Profile = req.Profile
 	reqNet.SignRequest.Label = req.Label
 
+	fmt.Println("GenCSR client.go", reqNet)
 	body, err := util.Marshal(reqNet, "SignRequest")
 	if err != nil {
 		return nil, err
 	}
+
 
 	// Send the CSR to the fabric-ca server with basic auth header
 	post, err := c.newPost("enroll", body)
@@ -290,9 +292,9 @@ func (c *Client) handleX509Enroll(req *api.EnrollmentRequest) (*EnrollmentRespon
 	var result common.EnrollmentResponseNet
 	err = c.SendReq(post, &result)
 	if err != nil {
+		fmt.Println("sendreq error")
 		return nil, err
 	}
-
 	// Create the enrollment response
 	return c.newEnrollmentResponse(&result, req.Name, key)
 }

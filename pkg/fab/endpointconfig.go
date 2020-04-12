@@ -17,7 +17,6 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/multi"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -29,7 +28,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/pathvar"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	grpcCodes "google.golang.org/grpc/codes"
 )
 
 var logger = logging.NewLogger("fabsdk/fab")
@@ -78,23 +76,6 @@ const (
 )
 
 var (
-	defaultDiscoveryRetryableCodes = map[status.Group][]status.Code{
-		status.GRPCTransportStatus: {
-			status.Code(grpcCodes.Unavailable),
-		},
-		status.DiscoveryServerStatus: {
-			status.QueryEndorsers,
-		},
-	}
-
-	defaultDiscoveryRetryOpts = retry.Opts{
-		Attempts:       6,
-		InitialBackoff: 500 * time.Millisecond,
-		MaxBackoff:     5 * time.Second,
-		BackoffFactor:  1.75,
-		RetryableCodes: defaultDiscoveryRetryableCodes,
-	}
-
 	defaultChannelPolicies = &ChannelPolicies{
 		QueryChannelConfig: QueryChannelConfigPolicy{
 			MaxTargets:   defaultMaxTargets,
@@ -104,7 +85,7 @@ var (
 		Discovery: DiscoveryPolicy{
 			MaxTargets:   defaultMaxTargets,
 			MinResponses: defaultMinResponses,
-			RetryOpts:    defaultDiscoveryRetryOpts,
+			RetryOpts:    retry.Opts{},
 		},
 		Selection: SelectionPolicy{
 			SortingStrategy:         BlockHeightPriority,
@@ -193,7 +174,7 @@ func (c *EndpointConfig) OrderersConfig() []fab.OrdererConfig {
 }
 
 // OrdererConfig returns the requested orderer
-func (c *EndpointConfig) OrdererConfig(nameOrURL string) (*fab.OrdererConfig, bool, bool) {
+func (c *EndpointConfig) OrdererConfig(nameOrURL string) (*fab.OrdererConfig, bool) {
 	return c.tryMatchingOrdererConfig(nameOrURL, true)
 }
 
@@ -1016,10 +997,6 @@ func (c *EndpointConfig) loadDefaultDiscoveryPolicy(policy *fab.DiscoveryPolicy)
 	if policy.MinResponses == 0 {
 		policy.MinResponses = defaultMinResponses
 	}
-
-	if len(policy.RetryOpts.RetryableCodes) == 0 {
-		policy.RetryOpts.RetryableCodes = defaultDiscoveryRetryableCodes
-	}
 }
 
 func (c *EndpointConfig) loadDefaultSelectionPolicy(policy *fab.SelectionPolicy) {
@@ -1282,8 +1259,8 @@ func (c *EndpointConfig) loadOrdererConfigs() error {
 	ordererConfigs := []fab.OrdererConfig{}
 	for name := range c.networkConfig.Orderers {
 
-		matchedOrderer, ok, ignoreOrderer := c.tryMatchingOrdererConfig(name, false)
-		if !ok || ignoreOrderer {
+		matchedOrderer, ok := c.tryMatchingOrdererConfig(name, false)
+		if !ok {
 			continue
 		}
 
@@ -1345,11 +1322,7 @@ func (c *EndpointConfig) loadChannelOrderers() error {
 		orderers := []fab.OrdererConfig{}
 		for _, ordererName := range channelConfig.Orderers {
 
-			orderer, ok, ignoreOrderer := c.tryMatchingOrdererConfig(strings.ToLower(ordererName), false)
-			if ignoreOrderer {
-				continue
-			}
-
+			orderer, ok := c.tryMatchingOrdererConfig(strings.ToLower(ordererName), false)
 			if !ok {
 				return errors.Errorf("Could not find Orderer Config for channel orderer [%s]", ordererName)
 			}
@@ -1485,7 +1458,7 @@ func (c *EndpointConfig) tryMatchingPeerConfig(peerSearchKey string, searchByURL
 func (c *EndpointConfig) matchPeer(peerSearchKey string, matcher matcherEntry) (*fab.PeerConfig, bool) {
 
 	if matcher.matchConfig.IgnoreEndpoint {
-		logger.Debugf("Ignoring peer `%s` since entity matcher IgnoreEndpoint flag is on", peerSearchKey)
+		logger.Debugf(" Ignoring peer `%s` since entity matcher IgnoreEndpoint flag is on", peerSearchKey)
 		return nil, false
 	}
 
@@ -1543,7 +1516,7 @@ func (c *EndpointConfig) getMappedPeer(host string) *fab.PeerConfig {
 	return &mappedConfig
 }
 
-func (c *EndpointConfig) tryMatchingOrdererConfig(ordererSearchKey string, searchByURL bool) (*fab.OrdererConfig, bool, bool) {
+func (c *EndpointConfig) tryMatchingOrdererConfig(ordererSearchKey string, searchByURL bool) (*fab.OrdererConfig, bool) {
 
 	//loop over orderer entity matchers to find the matching orderer
 	for _, matcher := range c.ordererMatchers {
@@ -1556,7 +1529,7 @@ func (c *EndpointConfig) tryMatchingOrdererConfig(ordererSearchKey string, searc
 	//direct lookup if orderer matchers are not configured or no matchers matched
 	orderer, ok := c.networkConfig.Orderers[strings.ToLower(ordererSearchKey)]
 	if ok {
-		return &orderer, true, false
+		return &orderer, true
 	}
 
 	if searchByURL {
@@ -1567,7 +1540,7 @@ func (c *EndpointConfig) tryMatchingOrdererConfig(ordererSearchKey string, searc
 					URL:         ordererCfg.URL,
 					GRPCOptions: ordererCfg.GRPCOptions,
 					TLSCACert:   ordererCfg.TLSCACert,
-				}, true, false
+				}, true
 			}
 		}
 	}
@@ -1578,19 +1551,17 @@ func (c *EndpointConfig) tryMatchingOrdererConfig(ordererSearchKey string, searc
 			URL:         ordererSearchKey,
 			GRPCOptions: c.defaultOrdererConfig.GRPCOptions,
 			TLSCACert:   c.defaultOrdererConfig.TLSCACert,
-		}, true, false
+		}, true
 	}
 
-	return nil, false, false
+	return nil, false
 }
 
-func (c *EndpointConfig) matchOrderer(ordererSearchKey string, matcher matcherEntry) (*fab.OrdererConfig, bool, bool) {
+func (c *EndpointConfig) matchOrderer(ordererSearchKey string, matcher matcherEntry) (*fab.OrdererConfig, bool) {
 
 	if matcher.matchConfig.IgnoreEndpoint {
-		logger.Debugf(" Ignoring orderer `%s` since entity matcher IgnoreEndpoint flag is on", ordererSearchKey)
-		// IgnoreEndpoint must force ignoring this matching orderer (weather found or not) and must be explicitly
-		// mentioned. The third argument is explicitly used for this, all other cases will return false.
-		return nil, false, true
+		logger.Debugf(" Ignoring peer `%s` since entity matcher IgnoreEndpoint flag is on", ordererSearchKey)
+		return nil, false
 	}
 
 	mappedHost := c.regexMatchAndReplace(matcher.regex, ordererSearchKey, matcher.matchConfig.MappedHost)
@@ -1599,7 +1570,7 @@ func (c *EndpointConfig) matchOrderer(ordererSearchKey string, matcher matcherEn
 	matchedOrderer := c.getMappedOrderer(mappedHost)
 	if matchedOrderer == nil {
 		logger.Debugf("Could not find mapped host [%s] for orderer [%s]", matcher.matchConfig.MappedHost, ordererSearchKey)
-		return nil, false, false
+		return nil, false
 	}
 
 	//URLSubstitutionExp if found use from entity matcher otherwise use from mapped host
@@ -1617,7 +1588,7 @@ func (c *EndpointConfig) matchOrderer(ordererSearchKey string, matcher matcherEn
 		matchedOrderer.URL = c.getDefaultMatchingURL(ordererSearchKey)
 	}
 
-	return matchedOrderer, true, false
+	return matchedOrderer, true
 }
 
 func (c *EndpointConfig) getMappedOrderer(host string) *fab.OrdererConfig {

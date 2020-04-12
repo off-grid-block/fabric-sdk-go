@@ -24,7 +24,7 @@ func CreateConfigSignature(ctx context.Client, config []byte) (*common.ConfigSig
 	}
 
 	signingMgr := ctx.SigningManager()
-	signature, err := signingMgr.Sign(cfd.SigningBytes, ctx.PrivateKey())
+	signature, err := signingMgr.Sign(cfd.SigningBytes, ctx.PrivateKey(),false,"")
 	if err != nil {
 		return nil, errors.WithMessage(err, "signing of channel config failed")
 	}

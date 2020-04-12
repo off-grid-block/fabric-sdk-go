@@ -315,6 +315,7 @@ type MockTransactionHeader struct {
 	MockCreator   []byte
 	MockNonce     []byte
 	MockChannelID string
+	MockDid		  string
 }
 
 // TransactionID returns the transaction's computed identifier.
@@ -335,6 +336,11 @@ func (th *MockTransactionHeader) Nonce() []byte {
 // ChannelID returns the transaction's target channel identifier.
 func (th *MockTransactionHeader) ChannelID() string {
 	return th.MockChannelID
+}
+
+// Did returns the transaction's did
+func (th *MockTransactionHeader) Did() string {
+	return th.MockDid
 }
 
 // NewMockTransactionHeader creates mock TxnID based on mock user.
@@ -363,6 +369,7 @@ func NewMockTransactionHeader(channelID string) (fab.TransactionHeader, error) {
 		MockCreator:   creator,
 		MockNonce:     nonce,
 		MockChannelID: channelID,
+		MockDid:	   "gfjhsdfghgfghsdjk",
 	}
 
 	return &txnID, nil

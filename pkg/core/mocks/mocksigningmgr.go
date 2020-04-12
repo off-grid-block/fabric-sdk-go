@@ -20,6 +20,6 @@ func NewMockSigningManager() core.SigningManager {
 }
 
 // Sign will sign the given object using provided key
-func (mgr *MockSigningManager) Sign(object []byte, key core.Key) ([]byte, error) {
+func (mgr *MockSigningManager) Sign(object []byte, key core.Key, indyFlag bool, did string) ([]byte, error) {
 	return object, nil
 }

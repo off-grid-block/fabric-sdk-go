@@ -150,7 +150,6 @@ func (r *Reference) Get(data ...interface{}) (interface{}, error) {
 	if value, ok := r.get(); ok {
 		return value, nil
 	}
-
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
@@ -158,6 +157,8 @@ func (r *Reference) Get(data ...interface{}) (interface{}, error) {
 	if value, ok := r.get(); ok {
 		return value, nil
 	}
+
+	//fmt.Println("First of data",first(data),data)
 
 	// Value hasn't been set yet
 	value, err := r.initializer(first(data))

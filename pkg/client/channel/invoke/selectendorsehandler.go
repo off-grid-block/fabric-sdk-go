@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package invoke
 
 import (
+
 	selectopts "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/options"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
@@ -23,7 +24,7 @@ import (
 var logger = logging.NewLogger("fabsdk/client")
 
 var lsccFilter = func(ccID string) bool {
-	return ccID != "lscc" && ccID != "_lifecycle"
+	return ccID != "lscc"
 }
 
 // SelectAndEndorseHandler selects endorsers according to the policies of the chaincodes in the provided invocation chain
@@ -55,9 +56,7 @@ func (e *SelectAndEndorseHandler) Handle(requestContext *RequestContext, clientC
 			return
 		}
 	}
-
 	e.EndorsementHandler.Handle(requestContext, clientContext)
-
 	if requestContext.Error != nil {
 		return
 	}

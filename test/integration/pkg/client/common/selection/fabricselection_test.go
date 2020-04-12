@@ -17,7 +17,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	pb "github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/fabricselection"
 	selectionopts "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/options"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
@@ -28,6 +27,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/provider/chpvdr"
 	"github.com/hyperledger/fabric-sdk-go/test/integration"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
+	cb "github.com/hyperledger/fabric-protos-go/common"
 	grpcCodes "google.golang.org/grpc/codes"
 )
 
@@ -345,19 +345,19 @@ func expecting(groups ...[]string) [][]string {
 	return groups
 }
 
-func newCollectionConfig(colName, policy string, reqPeerCount, maxPeerCount int32, blockToLive uint64) (*pb.CollectionConfig, error) {
+func newCollectionConfig(colName, policy string, reqPeerCount, maxPeerCount int32, blockToLive uint64) (*cb.CollectionConfig, error) {
 	p, err := cauthdsl.FromString(policy)
 	if err != nil {
 		return nil, err
 	}
-	cpc := &pb.CollectionPolicyConfig{
-		Payload: &pb.CollectionPolicyConfig_SignaturePolicy{
+	cpc := &cb.CollectionPolicyConfig{
+		Payload: &cb.CollectionPolicyConfig_SignaturePolicy{
 			SignaturePolicy: p,
 		},
 	}
-	return &pb.CollectionConfig{
-		Payload: &pb.CollectionConfig_StaticCollectionConfig{
-			StaticCollectionConfig: &pb.StaticCollectionConfig{
+	return &cb.CollectionConfig{
+		Payload: &cb.CollectionConfig_StaticCollectionConfig{
+			StaticCollectionConfig: &cb.StaticCollectionConfig{
 				Name:              colName,
 				MemberOrgsPolicy:  cpc,
 				RequiredPeerCount: reqPeerCount,

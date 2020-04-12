@@ -17,5 +17,6 @@ func callQuery(cc *Client, request Request, options ...RequestOption) (Response,
 }
 
 func callExecute(cc *Client, request Request, options ...RequestOption) (Response, error) {
-	return cc.InvokeHandler(invoke.NewExecuteHandler(), request, options...)
+	a := invoke.NewExecuteHandler()
+	return cc.InvokeHandler(a, request, options...)
 }

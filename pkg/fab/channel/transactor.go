@@ -60,13 +60,11 @@ func orderersFromChannelCfg(ctx context.Client, cfg fab.ChannelCfg) ([]fab.Order
 		return nil, err
 	}
 	if len(orderers) > 0 {
-		logger.Debugf("there [%v] orderer(s) in SDK config returning these and skipping channelCfg", len(orderers))
+
 		return orderers, nil
 	}
 
 	ordererDict := orderersByTarget(ctx)
-
-	logger.Debugf("there are no 'channel orderer(s)' in SDK configs. Got [%v] 'orderer(s)' configs from SDK and try to lookup additional ones in channelCfg", len(ordererDict))
 
 	// Add orderer if specified in channel config
 	for _, target := range cfg.Orderers() {
@@ -78,19 +76,14 @@ func orderersFromChannelCfg(ctx context.Client, cfg fab.ChannelCfg) ([]fab.Order
 		if !ok {
 			logger.Debugf("Failed to get channel Cfg orderer [%s] from ordererDict, now trying orderer Matchers in Entity Matchers", target)
 			// Try to find a match from entityMatchers config
-			matchingOrdererConfig, found, ignore := ctx.EndpointConfig().OrdererConfig(strings.ToLower(target))
-			if ignore {
-				logger.Debugf("orderer [%s] is ignored and will not be added", target)
-				continue
-			}
-
+			matchingOrdererConfig, found := ctx.EndpointConfig().OrdererConfig(strings.ToLower(target))
 			if found {
 				logger.Debugf("Found matching ordererConfig from entity Matchers for channel Cfg Orderer [%s]", target)
 				oCfg = *matchingOrdererConfig
 				ok = true
 			}
-		}
 
+		}
 		//create orderer using channel config block orderer address
 		if !ok {
 			logger.Debugf("Unable to find matching ordererConfig from entity Matchers for channel Cfg Orderer [%s]", target)
@@ -119,8 +112,8 @@ func orderersFromChannel(ctx context.Client, channelID string) ([]fab.Orderer, e
 	orderers := []fab.Orderer{}
 	for _, chOrderer := range chNetworkConfig.Orderers {
 
-		ordererConfig, found, ignoreOrderer := ctx.EndpointConfig().OrdererConfig(chOrderer)
-		if !found || ignoreOrderer {
+		ordererConfig, found := ctx.EndpointConfig().OrdererConfig(chOrderer)
+		if !found {
 			//continue if given channel orderer not found in endpoint config
 			continue
 		}
@@ -142,14 +135,12 @@ func orderersByTarget(ctx context.Client) map[string]fab.OrdererConfig {
 	for _, oc := range orderersConfig {
 		address := endpoint.ToAddress(oc.URL)
 		ordererDict[address] = oc
-		logger.Debugf("ordererConfig from SDK to be added: %s", oc.URL)
 	}
 	return ordererDict
 }
 
 // CreateTransactionHeader creates a Transaction Header based on the current context.
 func (t *Transactor) CreateTransactionHeader(opts ...fab.TxnHeaderOpt) (fab.TransactionHeader, error) {
-
 	ctx, ok := contextImpl.RequestClientContext(t.reqCtx)
 	if !ok {
 		return nil, errors.New("failed get client context from reqContext for txn Header")
@@ -172,8 +163,19 @@ func (t *Transactor) SendTransactionProposal(proposal *fab.TransactionProposal, 
 
 	reqCtx, cancel := contextImpl.NewRequest(ctx, contextImpl.WithTimeoutType(fab.PeerResponse), contextImpl.WithParent(t.reqCtx))
 	defer cancel()
+	return txn.SendProposal(reqCtx, proposal, targets, false, "")
+}
 
-	return txn.SendProposal(reqCtx, proposal, targets)
+// SendTransactionProposal sends a TransactionProposal to the target peers through Indy
+func (t *Transactor) SendTransactionProposalIndy(proposal *fab.TransactionProposal, targets []fab.ProposalProcessor, indyFlag bool, did string) ([]*fab.TransactionProposalResponse, error) {
+	ctx, ok := contextImpl.RequestClientContext(t.reqCtx)
+	if !ok {
+		return nil, errors.New("failed get client context from reqContext for SendTransactionProposal")
+	}
+
+	reqCtx, cancel := contextImpl.NewRequest(ctx, contextImpl.WithTimeoutType(fab.PeerResponse), contextImpl.WithParent(t.reqCtx))
+	defer cancel()
+	return txn.SendProposal(reqCtx, proposal, targets, indyFlag, did)
 }
 
 // CreateTransaction create a transaction with proposal response.

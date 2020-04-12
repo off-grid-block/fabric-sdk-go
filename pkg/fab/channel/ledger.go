@@ -209,11 +209,11 @@ func createChaincodeQueryResponse(tpr *fab.TransactionProposalResponse) (*pb.Cha
 }
 
 // QueryCollectionsConfig queries the collections config for a chaincode on this channel.
-func (c *Ledger) QueryCollectionsConfig(reqCtx reqContext.Context, chaincodeName string, targets []fab.ProposalProcessor, verifier ResponseVerifier) ([]*pb.CollectionConfigPackage, error) {
+func (c *Ledger) QueryCollectionsConfig(reqCtx reqContext.Context, chaincodeName string, targets []fab.ProposalProcessor, verifier ResponseVerifier) ([]*common.CollectionConfigPackage, error) {
 	cir := createCollectionsConfigInvokeRequest(chaincodeName)
 	tprs, errs := queryChaincode(reqCtx, c.chName, cir, targets, verifier)
 
-	responses := []*pb.CollectionConfigPackage{}
+	responses := []*common.CollectionConfigPackage{}
 	for _, tpr := range tprs {
 		r, err := createCollectionsConfigQueryResponse(tpr)
 		if err != nil {
@@ -225,8 +225,8 @@ func (c *Ledger) QueryCollectionsConfig(reqCtx reqContext.Context, chaincodeName
 	return responses, errs
 }
 
-func createCollectionsConfigQueryResponse(tpr *fab.TransactionProposalResponse) (*pb.CollectionConfigPackage, error) {
-	response := pb.CollectionConfigPackage{}
+func createCollectionsConfigQueryResponse(tpr *fab.TransactionProposalResponse) (*common.CollectionConfigPackage, error) {
+	response := common.CollectionConfigPackage{}
 	err := proto.Unmarshal(tpr.ProposalResponse.GetResponse().Payload, &response)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal of transaction proposal response failed")
@@ -256,6 +256,10 @@ func (c *Ledger) QueryConfigBlock(reqCtx reqContext.Context, targets []fab.Propo
 }
 
 func queryChaincode(reqCtx reqContext.Context, channelID string, request fab.ChaincodeInvokeRequest, targets []fab.ProposalProcessor, verifier ResponseVerifier) ([]*fab.TransactionProposalResponse, error) {
+	var tprs []*fab.TransactionProposalResponse
+	var tp *fab.TransactionProposal
+	var err error
+	var errs error
 	ctx, ok := contextImpl.RequestClientContext(reqCtx)
 	if !ok {
 		return nil, errors.New("failed get client context from reqContext for signProposal")
@@ -264,13 +268,21 @@ func queryChaincode(reqCtx reqContext.Context, channelID string, request fab.Cha
 	if err != nil {
 		return nil, errors.WithMessage(err, "creation of transaction ID failed")
 	}
-
-	tp, err := txn.CreateChaincodeInvokeProposal(txh, request)
-	if err != nil {
-		return nil, errors.WithMessage(err, "NewProposal failed")
+	
+	if txh.Did() != "" {
+		tp, err = txn.CreateChaincodeInvokeProposal(txh, request, true)
+		if err != nil {
+			return nil, errors.WithMessage(err, "NewProposal failed")
+		}
+		tprs, errs = txn.SendProposal(reqCtx, tp, targets, true, txh.Did())
 	}
-	tprs, errs := txn.SendProposal(reqCtx, tp, targets)
-
+	if len(txh.Creator())>1{
+		tp, err = txn.CreateChaincodeInvokeProposal(txh, request, false)
+		if err != nil {
+			return nil, errors.WithMessage(err, "NewProposal failed")
+		}
+		tprs, errs = txn.SendProposal(reqCtx, tp, targets, false, "")
+	}
 	return filterResponses(tprs, errs, verifier)
 }
 

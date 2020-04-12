@@ -409,7 +409,6 @@ func (c *Client) Register(request *RegistrationRequest) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	var a []mspapi.Attribute
 	for i := range request.Attributes {
 		a = append(a, mspapi.Attribute{Name: request.Attributes[i].Name, Value: request.Attributes[i].Value, ECert: request.Attributes[i].ECert})

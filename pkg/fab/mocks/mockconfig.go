@@ -181,7 +181,7 @@ func (c *MockConfig) SecurityProviderLibPath() string {
 
 // OrderersConfig returns a list of defined orderers
 func (c *MockConfig) OrderersConfig() []fab.OrdererConfig {
-	oConfig, _, _ := c.OrdererConfig("")
+	oConfig, _ := c.OrdererConfig("")
 	return []fab.OrdererConfig{*oConfig}
 }
 
@@ -206,18 +206,18 @@ func (c *MockConfig) SetCustomRandomOrdererCfg(customRandomOrdererCfg *fab.Order
 }
 
 // OrdererConfig not implemented
-func (c *MockConfig) OrdererConfig(name string) (*fab.OrdererConfig, bool, bool) {
+func (c *MockConfig) OrdererConfig(name string) (*fab.OrdererConfig, bool) {
 	if name == "Invalid" {
-		return nil, false, false
+		return nil, false
 	}
 	if c.customOrdererCfg != nil {
-		return c.customOrdererCfg, true, false
+		return c.customOrdererCfg, true
 	}
 	oConfig := fab.OrdererConfig{
 		URL: "example.com",
 	}
 
-	return &oConfig, true, false
+	return &oConfig, true
 }
 
 // KeyStorePath ...
@@ -294,7 +294,7 @@ func (c *MockConfig) ChannelOrderers(name string) []fab.OrdererConfig {
 		return nil
 	}
 
-	oConfig, _, _ := c.OrdererConfig("")
+	oConfig, _ := c.OrdererConfig("")
 
 	return []fab.OrdererConfig{*oConfig}
 }
