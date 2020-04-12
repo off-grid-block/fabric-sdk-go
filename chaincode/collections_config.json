@@ -1,0 +1,20 @@
+
+[
+  {
+       "name": "collectionVote",
+       "policy": "OR('org1.hf.sample.io.member')",
+       "requiredPeerCount": 2,
+       "maxPeerCount": 2,
+       "blockToLive":1000000,
+       "memberOnlyRead": true
+  },
+
+  {
+       "name": "collectionVotePrivateDetails",
+       "policy": "OR('org1.hf.sample.io.member')",
+       "requiredPeerCount": 2,
+       "maxPeerCount": 2,
+       "blockToLive":1000000,
+       "memberOnlyRead": true
+  }
+]
