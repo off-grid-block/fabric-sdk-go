@@ -9,8 +9,8 @@ package client
 import (
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client/dispatcher"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/options"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/events/client/dispatcher"
 )
 
 type params struct {

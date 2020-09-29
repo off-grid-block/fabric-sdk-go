@@ -19,12 +19,12 @@ require (
 	github.com/google/certificate-transparency-go v0.0.0-20180222191210-5ab67e519c93 // indirect
 	github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce // indirect
 	github.com/hyperledger/fabric-lib-go v1.0.0
-	github.com/hyperledger/fabric-protos-go v0.0.0-20200124220212-e9cfc186ba7b
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/magiconair/properties v1.7.6 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/miekg/pkcs11 v0.0.0-20190329070431-55f3fac3af27
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
+	github.com/off-grid-block/fabric-protos-go v0.0.0-20200929182751-c59fe09a026b // indirect
 	github.com/onsi/gomega v1.4.2 // indirect
 	github.com/pelletier/go-toml v1.1.0 // indirect
 	github.com/pkg/errors v0.8.1

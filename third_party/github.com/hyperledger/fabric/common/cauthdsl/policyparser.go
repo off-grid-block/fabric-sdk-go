@@ -18,9 +18,9 @@ import (
 	"strings"
 
 	"github.com/Knetic/govaluate"
-	"github.com/hyperledger/fabric-protos-go/common"
-	"github.com/hyperledger/fabric-protos-go/msp"
-	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/internal/protoutil"
+	"github.com/off-grid-block/fabric-protos-go/common"
+	"github.com/off-grid-block/fabric-protos-go/msp"
+	"github.com/off-grid-block/fabric-sdk-go/third_party/github.com/hyperledger/fabric/internal/protoutil"
 )
 
 // Gate values

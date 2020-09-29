@@ -13,15 +13,15 @@ import (
 
 	"encoding/hex"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/msp"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	mspctx "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite/bccsp/sw"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
-	mspimpl "github.com/hyperledger/fabric-sdk-go/pkg/msp"
-	"github.com/hyperledger/fabric-sdk-go/test/integration"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/msp"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
+	mspctx "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/core/cryptosuite"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/core/cryptosuite/bccsp/sw"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk"
+	mspimpl "github.com/off-grid-block/fabric-sdk-go/pkg/msp"
+	"github.com/off-grid-block/fabric-sdk-go/test/integration"
 )
 
 // TestWithCustomStores demonstrates the usage of custom key and cert stores

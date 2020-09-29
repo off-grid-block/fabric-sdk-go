@@ -7,9 +7,9 @@ SPDX-License-Identifier: Apache-2.0
 package chconfig
 
 import (
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/options"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/util/concurrent/lazycache"
 	"github.com/pkg/errors"
 )
 

@@ -8,8 +8,8 @@ package pgresolver
 
 import (
 	"github.com/golang/protobuf/proto"
-	common "github.com/hyperledger/fabric-protos-go/common"
-	mb "github.com/hyperledger/fabric-protos-go/msp"
+	common "github.com/off-grid-block/fabric-protos-go/common"
+	mb "github.com/off-grid-block/fabric-protos-go/msp"
 	"github.com/pkg/errors"
 )
 

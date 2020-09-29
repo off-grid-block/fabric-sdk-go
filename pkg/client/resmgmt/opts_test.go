@@ -11,8 +11,8 @@ import (
 
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	fcmocks "github.com/off-grid-block/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -12,11 +12,11 @@ package protoutil
 
 import (
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-protos-go/common"
-	cb "github.com/hyperledger/fabric-protos-go/common"
-	"github.com/hyperledger/fabric-protos-go/msp"
-	"github.com/hyperledger/fabric-protos-go/peer"
-	pb "github.com/hyperledger/fabric-protos-go/peer"
+	"github.com/off-grid-block/fabric-protos-go/common"
+	cb "github.com/off-grid-block/fabric-protos-go/common"
+	"github.com/off-grid-block/fabric-protos-go/msp"
+	"github.com/off-grid-block/fabric-protos-go/peer"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
 	"github.com/pkg/errors"
 )
 

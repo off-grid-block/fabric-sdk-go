@@ -9,11 +9,11 @@ package signingmgr
 import (
 	"fmt"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/sigindy"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/sigindy"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/core/cryptosuite"
 	"github.com/pkg/errors"
 )
 

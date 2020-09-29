@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/status"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/stretchr/testify/assert"
 )
 

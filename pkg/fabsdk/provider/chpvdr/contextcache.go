@@ -7,16 +7,16 @@ SPDX-License-Identifier: Apache-2.0
 package chpvdr
 
 import (
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/discovery/dynamicdiscovery"
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/discovery/staticdiscovery"
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/dynamicselection"
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/fabricselection"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/channel/membership"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/deliverclient"
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/discovery/dynamicdiscovery"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/discovery/staticdiscovery"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/selection/dynamicselection"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/selection/fabricselection"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/options"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/channel/membership"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/chconfig"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/events/deliverclient"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/util/concurrent/lazycache"
 	"github.com/pkg/errors"
 )
 

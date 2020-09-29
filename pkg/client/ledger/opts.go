@@ -10,9 +10,9 @@ import (
 	reqContext "context"
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/comm"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/comm"
 	"github.com/pkg/errors"
 )
 

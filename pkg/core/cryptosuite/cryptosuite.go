@@ -13,10 +13,10 @@ import (
 
 	"sync"
 
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite/bccsp/sw"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/logging"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/core/cryptosuite/bccsp/sw"
 )
 
 var logger = logging.NewLogger("fabsdk/core")

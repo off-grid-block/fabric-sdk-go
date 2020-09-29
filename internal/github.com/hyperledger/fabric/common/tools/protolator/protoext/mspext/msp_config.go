@@ -14,7 +14,7 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-protos-go/msp"
+	"github.com/off-grid-block/fabric-protos-go/msp"
 )
 
 type MSPConfig struct{ *msp.MSPConfig }

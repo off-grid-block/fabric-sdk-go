@@ -32,8 +32,8 @@ import (
 	"math/big"
 	mrand "math/rand"
 
-	factory "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	factory "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
 
 	"net/http"
 	"os"

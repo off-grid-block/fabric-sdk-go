@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/pkg/errors"
 )
 

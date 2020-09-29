@@ -10,10 +10,10 @@ import (
 	"io"
 	"sync"
 
-	cb "github.com/hyperledger/fabric-protos-go/common"
-	pb "github.com/hyperledger/fabric-protos-go/peer"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/test"
+	cb "github.com/off-grid-block/fabric-protos-go/common"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/mocks"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/util/test"
 	"github.com/pkg/errors"
 )
 

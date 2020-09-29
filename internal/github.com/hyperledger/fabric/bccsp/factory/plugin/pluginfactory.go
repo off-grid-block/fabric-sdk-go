@@ -15,7 +15,7 @@ import (
 	"os"
 	"plugin"
 
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 )
 
 const (

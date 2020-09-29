@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package fabsdk
 
 import (
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/pkg/errors"
 )
 

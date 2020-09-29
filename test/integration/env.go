@@ -9,9 +9,9 @@ package integration
 import (
 	"os"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/pathvar"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/core/config"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/util/pathvar"
 )
 
 const (

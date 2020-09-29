@@ -12,14 +12,14 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/verifier"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
-	fabcontext "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/verifier"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/logging"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/options"
+	fabcontext "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/core/config/comm"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/core/config/endpoint"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

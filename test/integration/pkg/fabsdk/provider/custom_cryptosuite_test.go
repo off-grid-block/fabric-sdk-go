@@ -11,16 +11,16 @@ import (
 
 	"fmt"
 
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
-	bccspSw "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp/factory/sw"
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite/bccsp/wrapper"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defcore"
-	"github.com/hyperledger/fabric-sdk-go/test/integration"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
+	bccspSw "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp/factory/sw"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/channel"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/retry"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/core/cryptosuite"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/core/cryptosuite/bccsp/wrapper"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk/factory/defcore"
+	"github.com/off-grid-block/fabric-sdk-go/test/integration"
 	"github.com/stretchr/testify/require"
 )
 

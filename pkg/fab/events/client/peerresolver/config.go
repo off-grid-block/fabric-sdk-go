@@ -7,9 +7,9 @@ SPDX-License-Identifier: Apache-2.0
 package peerresolver
 
 import (
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client/lbp"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/logging"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/events/client/lbp"
 )
 
 var logger = logging.NewLogger("fabsdk/fab")

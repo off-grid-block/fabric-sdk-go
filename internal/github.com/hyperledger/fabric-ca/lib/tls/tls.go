@@ -25,11 +25,11 @@ import (
 	"crypto/x509"
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
 
-	factory "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge"
-	log "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/util"
+	factory "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge"
+	log "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/util"
 	"github.com/pkg/errors"
 )
 

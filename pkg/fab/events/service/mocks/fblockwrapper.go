@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package mocks
 
 import (
-	pb "github.com/hyperledger/fabric-protos-go/peer"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
 )
 
 // FilteredBlockWrapper wraps the FilteredBlock and conforms to the Block interface

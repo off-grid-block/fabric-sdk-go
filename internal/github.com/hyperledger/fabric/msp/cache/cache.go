@@ -11,8 +11,8 @@ Please review third_party pinning scripts and patches for more details.
 package cache
 
 import (
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/msp"
-	flogging "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/logbridge"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/msp"
+	flogging "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/logbridge"
 	"github.com/pkg/errors"
 )
 

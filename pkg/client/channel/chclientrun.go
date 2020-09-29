@@ -7,9 +7,9 @@ SPDX-License-Identifier: Apache-2.0
 package channel
 
 import (
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/discovery/greylist"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/discovery/greylist"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
 )
 
 func newClient(channelContext context.Channel, membership fab.ChannelMembership, eventService fab.EventService, greylistProvider *greylist.Filter) Client {

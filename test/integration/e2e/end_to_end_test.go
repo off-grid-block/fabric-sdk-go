@@ -9,8 +9,8 @@ package e2e
 import (
 	"testing"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
-	"github.com/hyperledger/fabric-sdk-go/test/integration"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/core/config"
+	"github.com/off-grid-block/fabric-sdk-go/test/integration"
 )
 
 func TestE2E(t *testing.T) {

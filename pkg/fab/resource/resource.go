@@ -15,17 +15,17 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 
-	"github.com/hyperledger/fabric-protos-go/common"
-	pb "github.com/hyperledger/fabric-protos-go/peer"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/multi"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
-	contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
-	ccomm "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/txn"
+	"github.com/off-grid-block/fabric-protos-go/common"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/multi"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/retry"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/logging"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
+	contextImpl "github.com/off-grid-block/fabric-sdk-go/pkg/context"
+	ccomm "github.com/off-grid-block/fabric-sdk-go/pkg/core/config/comm"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/txn"
 )
 
 var logger = logging.NewLogger("fabsdk/fab")

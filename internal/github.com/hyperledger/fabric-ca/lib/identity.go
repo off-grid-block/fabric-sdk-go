@@ -17,12 +17,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/api"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/client/credential"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/client/credential/x509"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/common"
-	log "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/util"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/api"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/client/credential"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/client/credential/x509"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/common"
+	log "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/util"
 	"github.com/pkg/errors"
 )
 

@@ -16,19 +16,19 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/testdata"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
-	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/provider/chpvdr"
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/pathvar"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/channel"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	contextImpl "github.com/off-grid-block/fabric-sdk-go/pkg/context"
+	fcmocks "github.com/off-grid-block/fabric-sdk-go/pkg/fab/mocks"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk/provider/chpvdr"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/util/pathvar"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
-	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/core/common/ccprovider"
-	pb "github.com/hyperledger/fabric-protos-go/peer"
+	"github.com/off-grid-block/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
+	"github.com/off-grid-block/fabric-sdk-go/third_party/github.com/hyperledger/fabric/core/common/ccprovider"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
 )
 
 const (

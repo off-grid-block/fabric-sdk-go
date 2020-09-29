@@ -13,13 +13,13 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 
-	"github.com/hyperledger/fabric-protos-go/common"
-	pb "github.com/hyperledger/fabric-protos-go/peer"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/protoutil"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/multi"
-	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/context"
+	"github.com/off-grid-block/fabric-protos-go/common"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/protoutil"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/multi"
+	contextApi "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/context"
 )
 
 // CreateChaincodeInvokeProposal creates a proposal for transaction.

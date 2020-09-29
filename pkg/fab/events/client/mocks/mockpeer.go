@@ -9,7 +9,7 @@ package mocks
 import (
 	"sync"
 
-	fabmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
+	fabmocks "github.com/off-grid-block/fabric-sdk-go/pkg/fab/mocks"
 )
 
 // MockPeer contains mock PeerState

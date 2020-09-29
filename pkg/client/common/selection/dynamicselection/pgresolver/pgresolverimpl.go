@@ -11,10 +11,10 @@ import (
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
-	common "github.com/hyperledger/fabric-protos-go/common"
-	mb "github.com/hyperledger/fabric-protos-go/msp"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	common "github.com/off-grid-block/fabric-protos-go/common"
+	mb "github.com/off-grid-block/fabric-protos-go/msp"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/logging"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/pkg/errors"
 )
 

@@ -11,13 +11,13 @@ import (
 	reqContext "context"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-protos-go/common"
-	ab "github.com/hyperledger/fabric-protos-go/orderer"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
-	ccomm "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/txn"
+	"github.com/off-grid-block/fabric-protos-go/common"
+	ab "github.com/off-grid-block/fabric-protos-go/orderer"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/retry"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	contextImpl "github.com/off-grid-block/fabric-sdk-go/pkg/context"
+	ccomm "github.com/off-grid-block/fabric-sdk-go/pkg/core/config/comm"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/txn"
 	"github.com/pkg/errors"
 )
 

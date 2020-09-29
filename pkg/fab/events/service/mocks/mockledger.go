@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
 
-	pb "github.com/hyperledger/fabric-protos-go/peer"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
 )
 
 // Block is n abstract block

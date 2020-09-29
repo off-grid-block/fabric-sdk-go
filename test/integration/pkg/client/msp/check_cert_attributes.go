@@ -11,8 +11,8 @@ import (
 	"encoding/pem"
 	"testing"
 
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/attrmgr"
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/msp"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/attrmgr"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/msp"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )

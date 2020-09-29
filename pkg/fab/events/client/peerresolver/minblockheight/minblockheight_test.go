@@ -10,10 +10,10 @@ import (
 	"math"
 	"testing"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	clientmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client/mocks"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
-	"github.com/hyperledger/fabric-sdk-go/pkg/msp/test/mockmsp"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	clientmocks "github.com/off-grid-block/fabric-sdk-go/pkg/fab/events/client/mocks"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/mocks"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/msp/test/mockmsp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-protos-go/discovery"
-	"github.com/hyperledger/fabric-protos-go/gossip"
+	"github.com/off-grid-block/fabric-protos-go/discovery"
+	"github.com/off-grid-block/fabric-protos-go/gossip"
 	"github.com/pkg/errors"
 )
 

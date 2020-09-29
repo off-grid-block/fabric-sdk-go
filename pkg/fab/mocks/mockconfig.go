@@ -11,15 +11,15 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
-	"github.com/hyperledger/fabric-sdk-go/test/metadata"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/core/config/endpoint"
+	"github.com/off-grid-block/fabric-sdk-go/test/metadata"
 
 	"crypto/x509"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/test/mockfab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/test/mockfab"
 	"github.com/pkg/errors"
 )
 

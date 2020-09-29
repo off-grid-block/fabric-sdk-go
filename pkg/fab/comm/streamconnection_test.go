@@ -13,9 +13,9 @@ import (
 
 	"google.golang.org/grpc/keepalive"
 
-	fabmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
+	fabmocks "github.com/off-grid-block/fabric-sdk-go/pkg/fab/mocks"
 
-	pb "github.com/hyperledger/fabric-protos-go/peer"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 )

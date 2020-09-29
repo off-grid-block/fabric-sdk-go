@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
-	"github.com/hyperledger/fabric-protos-go/common"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/status"
+	"github.com/off-grid-block/fabric-protos-go/common"
 	"github.com/stretchr/testify/assert"
 )
 

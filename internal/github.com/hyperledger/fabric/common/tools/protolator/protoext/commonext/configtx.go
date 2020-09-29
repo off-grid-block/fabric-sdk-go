@@ -14,7 +14,7 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-protos-go/common"
+	"github.com/off-grid-block/fabric-protos-go/common"
 )
 
 type ConfigUpdateEnvelope struct{ *common.ConfigUpdateEnvelope }

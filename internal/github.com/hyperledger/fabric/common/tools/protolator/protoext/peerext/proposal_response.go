@@ -14,7 +14,7 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-protos-go/peer"
+	"github.com/off-grid-block/fabric-protos-go/peer"
 )
 
 type ProposalResponsePayload struct {

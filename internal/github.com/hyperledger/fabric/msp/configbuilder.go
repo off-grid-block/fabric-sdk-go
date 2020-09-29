@@ -17,8 +17,8 @@ import (
 	"path/filepath"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-protos-go/msp"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
+	"github.com/off-grid-block/fabric-protos-go/msp"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )

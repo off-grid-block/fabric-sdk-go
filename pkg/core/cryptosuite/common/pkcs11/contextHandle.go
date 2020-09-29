@@ -11,10 +11,10 @@ import (
 
 	"sync"
 
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/cachebridge"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/cachebridge"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/logging"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/util/concurrent/lazycache"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/util/concurrent/lazyref"
 	mPkcs11 "github.com/miekg/pkcs11"
 	"github.com/pkg/errors"
 )

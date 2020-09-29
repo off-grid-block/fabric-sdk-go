@@ -22,19 +22,19 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/discovery"
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/filter"
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/verifier"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/discovery"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/filter"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/verifier"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/status"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
 
-	"github.com/hyperledger/fabric-protos-go/common"
-	pb "github.com/hyperledger/fabric-protos-go/peer"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig"
+	"github.com/off-grid-block/fabric-protos-go/common"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/chconfig"
 
-	contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/channel"
+	contextImpl "github.com/off-grid-block/fabric-sdk-go/pkg/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/channel"
 	"github.com/pkg/errors"
 )
 

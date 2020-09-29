@@ -12,7 +12,7 @@ package ccprovider
 
 import (
 	"github.com/golang/protobuf/proto"
-	pb "github.com/hyperledger/fabric-protos-go/peer"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
 )
 
 // CCPackage encapsulates a chaincode package which can be

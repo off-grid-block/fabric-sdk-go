@@ -7,11 +7,11 @@ SPDX-License-Identifier: Apache-2.0
 package mocks
 
 import (
-	cb "github.com/hyperledger/fabric-protos-go/common"
-	ab "github.com/hyperledger/fabric-protos-go/orderer"
-	pb "github.com/hyperledger/fabric-protos-go/peer"
-	clientmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client/mocks"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/deliverclient/connection"
+	cb "github.com/off-grid-block/fabric-protos-go/common"
+	ab "github.com/off-grid-block/fabric-protos-go/orderer"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
+	clientmocks "github.com/off-grid-block/fabric-sdk-go/pkg/fab/events/client/mocks"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/events/deliverclient/connection"
 	"github.com/pkg/errors"
 )
 

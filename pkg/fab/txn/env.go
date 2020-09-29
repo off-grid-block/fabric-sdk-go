@@ -15,13 +15,13 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/pkg/errors"
 
-	"github.com/hyperledger/fabric-protos-go/common"
-	pb "github.com/hyperledger/fabric-protos-go/peer"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/crypto"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/protoutil"
-	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite"
+	"github.com/off-grid-block/fabric-protos-go/common"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/crypto"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/protoutil"
+	contextApi "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/core/cryptosuite"
 )
 
 // TransactionHeader contains metadata for a transaction created by the SDK.

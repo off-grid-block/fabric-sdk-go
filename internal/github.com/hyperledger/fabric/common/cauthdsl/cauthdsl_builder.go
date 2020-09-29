@@ -14,9 +14,9 @@ import (
 	"sort"
 
 	"github.com/golang/protobuf/proto"
-	cb "github.com/hyperledger/fabric-protos-go/common"
-	"github.com/hyperledger/fabric-protos-go/msp"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/protoutil"
+	cb "github.com/off-grid-block/fabric-protos-go/common"
+	"github.com/off-grid-block/fabric-protos-go/msp"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/protoutil"
 )
 
 // AcceptAllPolicy always evaluates to true

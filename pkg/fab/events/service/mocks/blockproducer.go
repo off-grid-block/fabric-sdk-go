@@ -9,8 +9,8 @@ package mocks
 import (
 	"sync/atomic"
 
-	cb "github.com/hyperledger/fabric-protos-go/common"
-	pb "github.com/hyperledger/fabric-protos-go/peer"
+	cb "github.com/off-grid-block/fabric-protos-go/common"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
 )
 
 // BlockProducer is a block BlockProducer that ensures the block

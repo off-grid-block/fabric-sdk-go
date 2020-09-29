@@ -12,9 +12,9 @@ import (
 	"os"
 	"testing"
 
-	eventmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/mocks"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
-	pb "github.com/hyperledger/fabric-protos-go/peer"
+	eventmocks "github.com/off-grid-block/fabric-sdk-go/pkg/fab/events/mocks"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/mocks"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
 	"google.golang.org/grpc"
 )
 

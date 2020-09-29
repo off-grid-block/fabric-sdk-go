@@ -11,12 +11,13 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"os"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
-	"github.com/hyperledger/fabric-sdk-go/pkg/msp/api"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/logging"
+	contextApi "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/msp/api"
 	"github.com/pkg/errors"
 )
 
@@ -138,7 +139,7 @@ func (c *CAClientImpl) Enroll(request *api.EnrollmentRequest) error {
 	}
 	var result map[string]interface{}
 	//Indy part
-	url := "http://10.53.17.40:8008/get_signing_did"
+	url := os.Getenv("CLIENT_AGENT_URL") + "/get_signing_did"
 
 	req, _ := http.NewRequest("GET", url, nil)
 

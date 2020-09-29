@@ -11,10 +11,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/futurevalue"
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/logging"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/options"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/util/concurrent/futurevalue"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/util/concurrent/lazyref"
 	"github.com/pkg/errors"
 )
 

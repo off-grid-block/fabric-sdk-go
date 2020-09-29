@@ -18,8 +18,8 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	m "github.com/hyperledger/fabric-protos-go/msp"
-	bccsp "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge"
+	m "github.com/off-grid-block/fabric-protos-go/msp"
+	bccsp "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge"
 	errors "github.com/pkg/errors"
 )
 

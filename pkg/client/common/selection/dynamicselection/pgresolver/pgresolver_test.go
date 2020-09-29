@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/cauthdsl"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	mocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
-	common "github.com/hyperledger/fabric-protos-go/common"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/cauthdsl"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	mocks "github.com/off-grid-block/fabric-sdk-go/pkg/fab/mocks"
+	common "github.com/off-grid-block/fabric-protos-go/common"
 )
 
 const (

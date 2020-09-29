@@ -10,10 +10,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/msp"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
-	"github.com/hyperledger/fabric-sdk-go/test/integration"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/msp"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk"
+	"github.com/off-grid-block/fabric-sdk-go/test/integration"
 	"github.com/stretchr/testify/require"
 )
 

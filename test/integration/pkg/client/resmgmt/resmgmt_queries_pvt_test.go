@@ -10,11 +10,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
-	"github.com/hyperledger/fabric-sdk-go/test/integration"
-	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
-	cb "github.com/hyperledger/fabric-protos-go/common"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/resmgmt"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk"
+	"github.com/off-grid-block/fabric-sdk-go/test/integration"
+	"github.com/off-grid-block/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
+	cb "github.com/off-grid-block/fabric-protos-go/common"
 	"github.com/stretchr/testify/require"
 )
 

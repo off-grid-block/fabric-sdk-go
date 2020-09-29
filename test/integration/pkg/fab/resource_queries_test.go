@@ -10,10 +10,10 @@ import (
 	reqContext "context"
 	"testing"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/retry"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/resource"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/resource"
 	"github.com/stretchr/testify/require"
 )
 

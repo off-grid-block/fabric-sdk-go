@@ -8,9 +8,9 @@ package channel
 import (
 	"testing"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
-	"github.com/hyperledger/fabric-sdk-go/test/integration"
-	"github.com/hyperledger/fabric-sdk-go/test/integration/util/runner"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk"
+	"github.com/off-grid-block/fabric-sdk-go/test/integration"
+	"github.com/off-grid-block/fabric-sdk-go/test/integration/util/runner"
 	"github.com/stretchr/testify/require"
 )
 

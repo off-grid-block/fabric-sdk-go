@@ -6,6 +6,7 @@ import (
 	"bytes"
 	b64 "encoding/base64"
 	"errors"
+	"os"
 
 	"encoding/json"
 	"net/http"
@@ -28,7 +29,7 @@ func IndySign(digest []byte, did string) (signature map[string]interface{}, err 
 	}
 
 	// Signing using the Client Agent by passing the proposal bytes and the signing_did
-	url := "http://10.53.17.40:8008/sign_message"
+	url := os.Getenv("CLIENT_AGENT_URL") + "/sign_message"
 	encoded := b64.StdEncoding.EncodeToString(digest)
 	payload := []byte(`{"message":"` + encoded + `","signing_did":"` + did + `"}`)
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(payload))

@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/stretchr/testify/assert"
 
-	mspmocks "github.com/hyperledger/fabric-sdk-go/pkg/msp/test/mockmsp"
+	mspmocks "github.com/off-grid-block/fabric-sdk-go/pkg/msp/test/mockmsp"
 )
 
 const (

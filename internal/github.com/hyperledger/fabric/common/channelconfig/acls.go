@@ -11,7 +11,7 @@ Please review third_party pinning scripts and patches for more details.
 package channelconfig
 
 import (
-	pb "github.com/hyperledger/fabric-protos-go/peer"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
 )
 
 // aclsProvider provides mappings for resource to policy names

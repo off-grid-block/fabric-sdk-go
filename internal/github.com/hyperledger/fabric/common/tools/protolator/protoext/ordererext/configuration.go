@@ -15,10 +15,10 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/hyperledger/fabric-protos-go/common"
-	"github.com/hyperledger/fabric-protos-go/msp"
-	"github.com/hyperledger/fabric-protos-go/orderer"
-	"github.com/hyperledger/fabric-protos-go/orderer/etcdraft"
+	"github.com/off-grid-block/fabric-protos-go/common"
+	"github.com/off-grid-block/fabric-protos-go/msp"
+	"github.com/off-grid-block/fabric-protos-go/orderer"
+	"github.com/off-grid-block/fabric-protos-go/orderer/etcdraft"
 )
 
 type DynamicOrdererGroup struct {
