@@ -9,6 +9,7 @@ package channel
 import (
 	reqContext "context"
 	"strings"
+	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -156,6 +157,7 @@ func (t *Transactor) CreateTransactionHeader(opts ...fab.TxnHeaderOpt) (fab.Tran
 
 // SendTransactionProposal sends a TransactionProposal to the target peers.
 func (t *Transactor) SendTransactionProposal(proposal *fab.TransactionProposal, targets []fab.ProposalProcessor) ([]*fab.TransactionProposalResponse, error) {
+	fmt.Println("inside SendTransactionProposal")
 	ctx, ok := contextImpl.RequestClientContext(t.reqCtx)
 	if !ok {
 		return nil, errors.New("failed get client context from reqContext for SendTransactionProposal")
@@ -168,6 +170,7 @@ func (t *Transactor) SendTransactionProposal(proposal *fab.TransactionProposal, 
 
 // SendTransactionProposal sends a TransactionProposal to the target peers through Indy
 func (t *Transactor) SendTransactionProposalIndy(proposal *fab.TransactionProposal, targets []fab.ProposalProcessor, indyFlag bool, did string) ([]*fab.TransactionProposalResponse, error) {
+	fmt.Println("inside SendTransactionProposalIndy")
 	ctx, ok := contextImpl.RequestClientContext(t.reqCtx)
 	if !ok {
 		return nil, errors.New("failed get client context from reqContext for SendTransactionProposal")

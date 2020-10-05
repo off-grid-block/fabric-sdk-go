@@ -25,11 +25,17 @@ func IndySign(digest []byte, did string) (signature map[string]interface{}, err 
 		return nil, errors.New("Empty did string received while creating Indy signature")
 	}
 	if len(did) != 22 {
-		return nil, errors.New("DID size not equal to 22")
+		return nil, errors.New("DID size not equal to 22: " + did)
 	}
 
 	// Signing using the Client Agent by passing the proposal bytes and the signing_did
-	url := os.Getenv("CLIENT_AGENT_URL") + "/sign_message"
+
+	clientAgentURL := os.Getenv("CLIENT_AGENT_URL")
+	if clientAgentURL == "" {
+		return nil, errors.New("Client agent URL not set.")
+	}
+
+	url := clientAgentURL + "/sign_message"
 	encoded := b64.StdEncoding.EncodeToString(digest)
 	payload := []byte(`{"message":"` + encoded + `","signing_did":"` + did + `"}`)
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(payload))

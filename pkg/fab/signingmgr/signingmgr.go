@@ -53,6 +53,7 @@ func (mgr *SigningManager) Sign(object []byte, key core.Key, indyFlag bool, did 
 	}
 
 	if indyFlag == false {
+
 		if key == nil {
 			return nil, errors.New("key (for signing) required")
 		}

@@ -9,6 +9,7 @@ package txn
 import (
 	reqContext "context"
 	"sync"
+	"fmt"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
@@ -73,6 +74,8 @@ func signProposal(ctx contextApi.Client, proposal *pb.Proposal, indyFlag bool, d
 		return nil, errors.WithMessage(err, "sign failed")
 	}
 
+	fmt.Printf("Signature (after signing): %v\n", signature)
+
 	return &pb.SignedProposal{ProposalBytes: proposalBytes, Signature: signature}, nil
 }
 
@@ -102,7 +105,10 @@ func SendProposal(reqCtx reqContext.Context, proposal *fab.TransactionProposal, 
 	if err != nil {
 		return nil, errors.WithMessage(err, "sign proposal failed")
 	}
+
+	fmt.Printf("Signature (inside SendProposal): %v\n", signedProposal.Signature)
 	request := fab.ProcessProposalRequest{SignedProposal: signedProposal}
+
 
 	var responseMtx sync.Mutex
 	var transactionProposalResponses []*fab.TransactionProposalResponse

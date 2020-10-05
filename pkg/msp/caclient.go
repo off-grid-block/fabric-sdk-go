@@ -145,7 +145,14 @@ func (c *CAClientImpl) Enroll(request *api.EnrollmentRequest) error {
 
 	req.Header.Add("content-type", "text/plain")
 
-	res, _ := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("Failed to get signing did: %v", err)
+	}
+
+	if res == nil {
+		return errors.New("Request failed")
+	}
 
 	json.NewDecoder(res.Body).Decode(&result)
 
@@ -153,11 +160,11 @@ func (c *CAClientImpl) Enroll(request *api.EnrollmentRequest) error {
 
 	new_did := fmt.Sprintf("%v", result["signing_did"])
 	userData := &msp.UserData{
-		MSPID:                 "org1.hf.sample.io",
+		MSPID:                 "Org1MSP",
 		ID:                    request.Name,
 		EnrollmentCertificate: []byte(new_did),
 	}
-	err := c.userStore.Store(userData)
+	err = c.userStore.Store(userData)
 	if err != nil {
 		return errors.Wrap(err, "enroll failed")
 	}
