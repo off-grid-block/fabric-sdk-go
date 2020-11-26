@@ -9,7 +9,7 @@ package signingmgr
 import (
 	"fmt"
 
-	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/sigindy"
+	"github.com/off-grid-block/controller"
 
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
 
@@ -43,13 +43,28 @@ func (mgr *SigningManager) Sign(object []byte, key core.Key, indyFlag bool, did 
 	if err != nil {
 		return nil, err
 	}
+
+	// Signature for transaction
 	var signature []byte
 
 	// Calling the package for Signing using Indy
 	if indyFlag == true {
-		indySig, _ := sigindy.IndySign(digest, did)
-		sig := fmt.Sprintf("%v", indySig["signature"])
-		signature = []byte(sig)
+		// create new client controller
+		cc, _ := controller.NewClientController()
+		cc.SigningDid = did
+		// sign digest and return signature
+		sigResp, err := cc.SignMessage(digest)
+		if err != nil {
+			return nil, fmt.Errorf("Error while signing message: %v\n", err)
+		}
+		// new signature
+		signature = []byte(sigResp)
+
+		//fmt.Println("Indy sign flag on")
+		//indySig, _ := sigindy.IndySign(digest, did)
+		//sig := fmt.Sprintf("%v", indySig["signature"])
+		//fmt.Println("SIGNATURE INSIDE: ", sig)
+		//signature = []byte(sig)
 	}
 
 	if indyFlag == false {
