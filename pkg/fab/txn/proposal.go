@@ -8,11 +8,9 @@ package txn
 
 import (
 	reqContext "context"
-	"sync"
-	"fmt"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
+	"sync"
 
 	"github.com/off-grid-block/fabric-protos-go/common"
 	pb "github.com/off-grid-block/fabric-protos-go/peer"
@@ -74,8 +72,6 @@ func signProposal(ctx contextApi.Client, proposal *pb.Proposal, indyFlag bool, d
 		return nil, errors.WithMessage(err, "sign failed")
 	}
 
-	fmt.Printf("Signature (after signing): %v\n", signature)
-
 	return &pb.SignedProposal{ProposalBytes: proposalBytes, Signature: signature}, nil
 }
 
@@ -106,9 +102,7 @@ func SendProposal(reqCtx reqContext.Context, proposal *fab.TransactionProposal, 
 		return nil, errors.WithMessage(err, "sign proposal failed")
 	}
 
-	fmt.Printf("Signature (inside SendProposal): %v\n", signedProposal.Signature)
 	request := fab.ProcessProposalRequest{SignedProposal: signedProposal}
-
 
 	var responseMtx sync.Mutex
 	var transactionProposalResponses []*fab.TransactionProposalResponse
@@ -138,9 +132,6 @@ func SendProposal(reqCtx reqContext.Context, proposal *fab.TransactionProposal, 
 		}(p)
 	}
 	wg.Wait()
-	// fmt.Println("Proposal Resposnse")
-	// fmt.Println(transactionProposalResponses)
-
 	return transactionProposalResponses, errs.ToError()
 }
 
