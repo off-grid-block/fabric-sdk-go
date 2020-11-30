@@ -9,7 +9,6 @@ package channel
 import (
 	reqContext "context"
 	"strings"
-	"fmt"
 
 	"github.com/pkg/errors"
 
