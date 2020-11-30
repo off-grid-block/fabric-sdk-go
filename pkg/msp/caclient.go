@@ -7,18 +7,15 @@ SPDX-License-Identifier: Apache-2.0
 package msp
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"strings"
-	"os"
-
+	"github.com/off-grid-block/controller"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/logging"
 	contextApi "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/msp/api"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 var logger = logging.NewLogger("fabsdk/msp")
@@ -137,33 +134,41 @@ func (c *CAClientImpl) Enroll(request *api.EnrollmentRequest) error {
 	if request.Secret == "" {
 		return errors.New("enrollmentSecret is required")
 	}
-	var result map[string]interface{}
-	//Indy part
-	url := os.Getenv("CLIENT_AGENT_URL") + "/get_signing_did"
+	// var result map[string]interface{}
+	// //Indy part
+	// url := os.Getenv("CLIENT_AGENT_URL") + "/get_signing_did"
 
-	req, _ := http.NewRequest("GET", url, nil)
+	// req, _ := http.NewRequest("GET", url, nil)
+	// req.Header.Add("content-type", "text/plain")
+	// res, err := http.DefaultClient.Do(req)
+	// if err != nil {
+	// 	return fmt.Errorf("Failed to get signing did: %v", err)
+	// }
+	// if res == nil {
+	// 	return errors.New("Request failed")
+	// }
 
-	req.Header.Add("content-type", "text/plain")
+	// json.NewDecoder(res.Body).Decode(&result)
+	// defer res.Body.Close()
+	// new_did := fmt.Sprintf("%v", result["signing_did"])
 
-	res, err := http.DefaultClient.Do(req)
+	cc, _ := controller.NewClientController()
+	err := cc.CreateSigningDid()
 	if err != nil {
-		return fmt.Errorf("Failed to get signing did: %v", err)
+		return errors.Wrap(err, "failed to create signing DID")
 	}
 
-	if res == nil {
-		return errors.New("Request failed")
+	err = controller.PutKeyToLedger(cc, cc.SigningDid, cc.SigningVk)
+	if err != nil {
+		return errors.Wrap(err, "failed to put key on indy ledger")
 	}
 
-	json.NewDecoder(res.Body).Decode(&result)
-
-	defer res.Body.Close()
-
-	new_did := fmt.Sprintf("%v", result["signing_did"])
 	userData := &msp.UserData{
 		MSPID:                 "Org1MSP",
 		ID:                    request.Name,
-		EnrollmentCertificate: []byte(new_did),
+		EnrollmentCertificate: []byte(cc.SigningDid),
 	}
+
 	err = c.userStore.Store(userData)
 	if err != nil {
 		return errors.Wrap(err, "enroll failed")
