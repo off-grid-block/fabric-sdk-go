@@ -15,6 +15,8 @@ import (
 
 	"github.com/off-grid-block/fabric-sdk-go/pkg/core/cryptosuite"
 	"github.com/pkg/errors"
+
+	"os"
 )
 
 // SigningManager is used for signing objects with private key
@@ -49,8 +51,13 @@ func (mgr *SigningManager) Sign(object []byte, key core.Key, indyFlag bool, did 
 
 	// Calling the package for Signing using Indy
 	if indyFlag == true {
+
+		agentUrl := os.Getenv("CLIENT_AGENT_URL")
+		if agentUrl == "" {
+			return nil, errors.New("client agent URL env variable is empty")
+		}
 		// create new client controller
-		cc, _ := controller.NewClientController()
+		cc, _ := controller.NewClientController("client", agentUrl)
 		cc.SigningDid = did
 		// sign digest and return signature
 		sigResp, err := cc.SignMessage(digest)

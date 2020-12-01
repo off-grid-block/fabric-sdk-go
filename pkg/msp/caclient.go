@@ -15,6 +15,7 @@ import (
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/msp/api"
 	"github.com/pkg/errors"
+	"os"
 	"strings"
 )
 
@@ -152,7 +153,12 @@ func (c *CAClientImpl) Enroll(request *api.EnrollmentRequest) error {
 	// defer res.Body.Close()
 	// new_did := fmt.Sprintf("%v", result["signing_did"])
 
-	cc, _ := controller.NewClientController()
+	agentUrl := os.Getenv("CLIENT_AGENT_URL")
+	if agentUrl == "" {
+		return errors.New("client agent URL env variable is empty")
+	}
+
+	cc, _ := controller.NewClientController("client", agentUrl)
 	err := cc.CreateSigningDid()
 	if err != nil {
 		return errors.Wrap(err, "failed to create signing DID")
