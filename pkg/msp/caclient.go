@@ -164,6 +164,9 @@ func (c *CAClientImpl) Enroll(request *api.EnrollmentRequest) error {
 		return errors.Wrap(err, "failed to create signing DID")
 	}
 
+	//fmt.Println("Signing DID: %v\n", cc.SigningDid)
+	//fmt.Println("Signing VK:  %v\n", cc.SigningVk)
+
 	err = controller.PutKeyToLedger(cc, cc.SigningDid, cc.SigningVk)
 	if err != nil {
 		return errors.Wrap(err, "failed to put key on indy ledger")
