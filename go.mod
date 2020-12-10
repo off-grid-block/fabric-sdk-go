@@ -24,7 +24,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/miekg/pkcs11 v0.0.0-20190329070431-55f3fac3af27
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
-	github.com/off-grid-block/controller v0.0.0-20201204201447-2bec1c305363
+	github.com/off-grid-block/controller v0.0.0-20201210205413-9b78d59d7063
 	github.com/off-grid-block/fabric-protos-go v0.0.0-20200929182751-c59fe09a026b
 	github.com/onsi/gomega v1.4.2 // indirect
 	github.com/pelletier/go-toml v1.1.0 // indirect
