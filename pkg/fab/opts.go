@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	commtls "github.com/off-grid-block/fabric-sdk-go/pkg/core/config/comm/tls"
 )
 
 // EndpointConfigOptions represents EndpointConfig interface with overridable interface functions
@@ -49,7 +50,7 @@ type orderersConfig interface {
 
 // ordererConfig interface allows to uniquely override EndpointConfig interface's OrdererConfig() function
 type ordererConfig interface {
-	OrdererConfig(name string) (*fab.OrdererConfig, bool)
+	OrdererConfig(name string) (*fab.OrdererConfig, bool, bool)
 }
 
 // peersConfig interface allows to uniquely override EndpointConfig interface's PeersConfig() function
@@ -89,7 +90,7 @@ type channelOrderers interface {
 
 // tlsCACertPool interface allows to uniquely override EndpointConfig interface's TLSCACertPool() function
 type tlsCACertPool interface {
-	TLSCACertPool() fab.CertPool
+	TLSCACertPool() commtls.CertPool
 }
 
 // tlsClientCerts interface allows to uniquely override EndpointConfig interface's TLSClientCerts() function

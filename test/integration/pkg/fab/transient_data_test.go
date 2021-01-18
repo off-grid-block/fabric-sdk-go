@@ -8,9 +8,12 @@ package fab
 
 import (
 	reqContext "context"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/retry"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/status"
 	contextAPI "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/context"
@@ -89,21 +92,21 @@ func createAndSendTransactionProposal(transactor fab.ProposalSender, chainCodeID
 		tp  *fab.TransactionProposal
 	}
 
-	invokerResp, err := retry.NewInvoker(retry.New(retry.DefaultChannelOpts)).Invoke(
+	invokerResp, err := retry.NewInvoker(retry.New(retry.TestRetryOpts)).Invoke(
 		func() (interface{}, error) {
 			txh, err := transactor.CreateTransactionHeader()
 			if err != nil {
 				return nil, errors.WithMessage(err, "creating transaction header failed")
 			}
 
-			tp, err := txn.CreateChaincodeInvokeProposal(txh, propReq, false)
+			tp, err := txn.CreateChaincodeInvokeProposal(txh, propReq)
 			if err != nil {
 				return nil, errors.WithMessage(err, "creating transaction proposal failed")
 			}
 
 			tpr, err := transactor.SendTransactionProposal(tp, targets)
-			if err != nil {
-				return nil, errors.WithMessage(err, "invoking transaction proposal failed")
+			if err != nil && strings.Contains(err.Error(), "500") {
+				return nil, status.New(status.TestStatus, status.GenericTransient.ToInt32(), fmt.Sprintf("creating transaction proposal failed error: %v", err), nil)
 			}
 
 			return &invokerResponse{

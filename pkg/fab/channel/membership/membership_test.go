@@ -25,15 +25,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp/utils"
-	"github.com/off-grid-block/fabric-sdk-go/test/metadata"
-	"github.com/pkg/errors"
-
 	"github.com/golang/protobuf/proto"
+	mb "github.com/off-grid-block/fabric-protos-go/msp"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/keyutil"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/core/config/comm/tls"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/mocks"
-	mb "github.com/off-grid-block/fabric-protos-go/msp"
-	"github.com/stretchr/testify/assert"
+	"github.com/off-grid-block/fabric-sdk-go/test/metadata"
 )
 
 var pathRevokeCaRoot = filepath.Join(metadata.GetProjectPath(), metadata.CryptoConfigPath, "peerOrganizations/org1.example.com/ca/")
@@ -99,13 +99,11 @@ func TestCertSignedWithUnknownAuthority(t *testing.T) {
 
 //TestRevokedCertificate
 func TestRevokedCertificate(t *testing.T) {
-	var err error
+
 	goodMSPID := "GoodMSP"
 	ctx := mocks.NewMockProviderContext()
 	cfg := mocks.NewMockChannelCfg("")
-	if err != nil {
-		t.Fatalf("Error %s", err)
-	}
+
 	// Test good config input
 	cfg.MockMSPs = []*mb.MSPConfig{buildMSPConfig(goodMSPID, []byte(orgTwoCA))}
 	m, err := New(Context{Providers: ctx, EndpointConfig: mocks.NewMockEndpointConfig()}, cfg)
@@ -221,6 +219,13 @@ func buildfabricMSPConfig(name string, root []byte) *mb.FabricMSPConfig {
 		RootCerts:                     [][]byte{root},
 		RevocationList:                [][]byte{[]byte(newCRL)},
 		SigningIdentity:               nil,
+		FabricNodeOus: &mb.FabricNodeOUs{
+			Enable:              true,
+			AdminOuIdentifier:   &mb.FabricOUIdentifier{OrganizationalUnitIdentifier: "admin"},
+			ClientOuIdentifier:  &mb.FabricOUIdentifier{OrganizationalUnitIdentifier: "client"},
+			PeerOuIdentifier:    &mb.FabricOUIdentifier{OrganizationalUnitIdentifier: "peer"},
+			OrdererOuIdentifier: &mb.FabricOUIdentifier{OrganizationalUnitIdentifier: "client"},
+		},
 	}
 
 	return config
@@ -236,35 +241,36 @@ func marshalOrPanic(pb proto.Message) []byte {
 }
 
 var validRootCA = `-----BEGIN CERTIFICATE-----
-MIICQzCCAemgAwIBAgIQYZpqGmcswky9Iy1SHBIm8zAKBggqhkjOPQQDAjBzMQsw
-CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy
-YW5jaXNjbzEZMBcGA1UEChMQb3JnMS5leGFtcGxlLmNvbTEcMBoGA1UEAxMTY2Eu
-b3JnMS5leGFtcGxlLmNvbTAeFw0xNzA3MjgxNDI3MjBaFw0yNzA3MjYxNDI3MjBa
-MHMxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1T
-YW4gRnJhbmNpc2NvMRkwFwYDVQQKExBvcmcxLmV4YW1wbGUuY29tMRwwGgYDVQQD
-ExNjYS5vcmcxLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE
-3WtPeUzseT9Wp9VUtkx6mF84plyhgTlI2pbrHa4wYKFSoQGmrt83px6Q5Qu9EmhW
-1y6Fr8DxkHvvg1NX0bCGyaNfMF0wDgYDVR0PAQH/BAQDAgGmMA8GA1UdJQQIMAYG
-BFUdJQAwDwYDVR0TAQH/BAUwAwEB/zApBgNVHQ4EIgQgh5HRNj6JUV+a+gQrBpOi
-xwS7jdldKPl9NUmiuePENS0wCgYIKoZIzj0EAwIDSAAwRQIhALUmxdk1FP8uL1so
-nLdU8D8CS2PW5DLbaMjhR1KVK3b7AiAD5vkgX1PXPRsFFYlbkp/Y+nDdDy+mk3N7
-K7xCT/QO7Q==
------END CERTIFICATE-----
-`
+MIICJzCCAc2gAwIBAgIUHS1hbKgmtURco9FMkOTAVynQKCgwCgYIKoZIzj0EAwIw
+cDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMQ8wDQYDVQQH
+EwZEdXJoYW0xGTAXBgNVBAoTEG9yZzEuZXhhbXBsZS5jb20xHDAaBgNVBAMTE2Nh
+Lm9yZzEuZXhhbXBsZS5jb20wHhcNMjAwNjE3MTA0ODAwWhcNMzUwNjE0MTA0ODAw
+WjBwMQswCQYDVQQGEwJVUzEXMBUGA1UECBMOTm9ydGggQ2Fyb2xpbmExDzANBgNV
+BAcTBkR1cmhhbTEZMBcGA1UEChMQb3JnMS5leGFtcGxlLmNvbTEcMBoGA1UEAxMT
+Y2Eub3JnMS5leGFtcGxlLmNvbTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABMbm
+0K7nntIdKITqDvm0iA2IdXE30gcPijD+b5mNUbmkSTfekU7Y2Dn6+1mG9VRp0a6U
+iFeo2l9nG2VZpODzaMGjRTBDMA4GA1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAG
+AQH/AgEBMB0GA1UdDgQWBBQ8GSzQHrtf9oKIO89wav9TRCxYbTAKBggqhkjOPQQD
+AgNIADBFAiEAgWNqI8SKF1EkDhEkNpRiBC/JH+IWdpXM4XBvRKvx3T0CICb+AKil
+nalNCQP6jt4Z9Dvj19Xn/19D75PMhMms7sB0
+-----END CERTIFICATE-----`
 
 var certPem = `-----BEGIN CERTIFICATE-----
-MIICGDCCAb+gAwIBAgIQXOaCoTss6vG3zb/vRGWXuDAKBggqhkjOPQQDAjBzMQsw
-CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy
-YW5jaXNjbzEZMBcGA1UEChMQb3JnMS5leGFtcGxlLmNvbTEcMBoGA1UEAxMTY2Eu
-b3JnMS5leGFtcGxlLmNvbTAeFw0xNzA3MjgxNDI3MjBaFw0yNzA3MjYxNDI3MjBa
-MFsxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1T
-YW4gRnJhbmNpc2NvMR8wHQYDVQQDExZwZWVyMC5vcmcxLmV4YW1wbGUuY29tMFkw
-EwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWXupBEBzx/Mnjz1hzIUeOGiVR4CV/7aS
-Qv0aokqJanTD+x8MaavBNYbPUwwzUNc7c1Ydd12gUNHPnyj/r1YyuaNNMEswDgYD
-VR0PAQH/BAQDAgeAMAwGA1UdEwEB/wQCMAAwKwYDVR0jBCQwIoAgh5HRNj6JUV+a
-+gQrBpOixwS7jdldKPl9NUmiuePENS0wCgYIKoZIzj0EAwIDRwAwRAIgT2CAHCtr
-Ro1YX8QuD6dSZUAOmptC+xU5xhp+2MeY2BkCIHmLOMBU5KIyJ5Rah4QeiswJ/pge
-0eiDDUjXWGduFy4x
+MIICrzCCAlWgAwIBAgIURgJ5whz9lvp3Fkk+xapPLxxgsgswCgYIKoZIzj0EAwIw
+cDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMQ8wDQYDVQQH
+EwZEdXJoYW0xGTAXBgNVBAoTEG9yZzEuZXhhbXBsZS5jb20xHDAaBgNVBAMTE2Nh
+Lm9yZzEuZXhhbXBsZS5jb20wHhcNMjAwNjE3MTA0ODAwWhcNMzAwNjE1MTA1MzAw
+WjBdMQswCQYDVQQGEwJVUzEXMBUGA1UECBMOTm9ydGggQ2Fyb2xpbmExFDASBgNV
+BAoTC0h5cGVybGVkZ2VyMQ8wDQYDVQQLEwZjbGllbnQxDjAMBgNVBAMTBXVzZXIx
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErrVSd6NA3YdlhsfRRLhSaeYeKA/h
+fNKK7oBJUtLxUPXbHqxZ4u2s9UeuFrC5WVzHVAWvAHFKHkEEmPkWB48v/6OB3zCB
+3DAOBgNVHQ8BAf8EBAMCB4AwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUF4jYTs6j
+Vod3ahqMumslAHl+zXIwHwYDVR0jBBgwFoAUPBks0B67X/aCiDvPcGr/U0QsWG0w
+IgYDVR0RBBswGYIXQW5kcmV3cy1NQlAtOS5icm9hZGJhbmQwWAYIKgMEBQYHCAEE
+THsiYXR0cnMiOnsiaGYuQWZmaWxpYXRpb24iOiIiLCJoZi5FbnJvbGxtZW50SUQi
+OiJ1c2VyMSIsImhmLlR5cGUiOiJjbGllbnQifX0wCgYIKoZIzj0EAwIDSAAwRQIh
+ANqxuLKIvWlpSr+jklS+jcfb68hXqnC2zshR7y0aAEQCAiAHOsxSK8s42/ynDWYM
+Rxtk8baO32vSrjao5ESHgew8Nw==
 -----END CERTIFICATE-----`
 
 var invalidSignaturePem = `-----BEGIN CERTIFICATE-----
@@ -410,7 +416,7 @@ func loadPrivateKey(path string) (interface{}, error) {
 		return nil, err
 	}
 
-	key, err := utils.PEMtoPrivateKey(raw, []byte(""))
+	key, err := keyutil.PEMToPrivateKey(raw, []byte(""))
 	if err != nil {
 		return nil, err
 	}

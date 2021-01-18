@@ -53,30 +53,31 @@ func NewInvoker(handler Handler, opts ...InvokerOpt) *RetryableInvoker {
 func (ri *RetryableInvoker) Invoke(invocation Invocation) (interface{}, error) {
 	attemptNum := 0
 	var lastErr error
+
 	for {
 		attemptNum++
 		if attemptNum > 1 {
-			logger.Info("Retry attempt #%d on error [%s]", attemptNum, lastErr)
+			logger.Debugf("Retry attempt #%d on error [%s]", attemptNum, lastErr)
 		}
 
 		retval, err := invocation()
 		if err == nil {
 			if attemptNum > 1 {
-				logger.Info("Success on attempt #%d after error [%s]", attemptNum, lastErr)
+				logger.Debugf("Success on attempt #%d after error [%s]", attemptNum, lastErr)
 			}
 			return retval, nil
 		}
 
-		logger.Info("Failed with err [%s] on attempt #%d. Checking if retry is warranted...", err, attemptNum)
+		logger.Debugf("Failed with err [%s] on attempt #%d. Checking if retry is warranted...", err, attemptNum)
 		if !ri.resolveRetry(err) {
 			if lastErr != nil && lastErr.Error() != err.Error() {
-				logger.Info("... retry for err [%s] is NOT warranted after %d attempt(s). Previous error [%s]", err, attemptNum, lastErr)
+				logger.Debugf("... retry for err [%s] is NOT warranted after %d attempt(s). Previous error [%s]", err, attemptNum, lastErr)
 			} else {
-				logger.Info("... retry for err [%s] is NOT warranted after %d attempt(s).", err, attemptNum)
+				logger.Debugf("... retry for err [%s] is NOT warranted after %d attempt(s).", err, attemptNum)
 			}
 			return nil, err
 		}
-		logger.Info("... retry for err [%s] is warranted", err)
+		logger.Debugf("... retry for err [%s] is warranted", err)
 		lastErr = err
 	}
 }

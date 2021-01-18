@@ -11,7 +11,7 @@ Please review third_party pinning scripts and patches for more details.
 package lib
 
 import (
-	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/api"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkinternal/pkg/api"
 )
 
 type revocationResponseNet struct {

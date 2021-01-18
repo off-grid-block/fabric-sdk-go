@@ -7,48 +7,43 @@ SPDX-License-Identifier: Apache-2.0
 package revoked
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/pem"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/off-grid-block/fabric-protos-go/common"
+	"github.com/off-grid-block/fabric-protos-go/msp"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/keyutil"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/channel"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/ledger"
+	mspclient "github.com/off-grid-block/fabric-sdk-go/pkg/client/msp"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/resmgmt"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/status"
 	contextAPI "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/pkg/errors"
-
-	"github.com/off-grid-block/fabric-sdk-go/pkg/client/ledger"
-	mspclient "github.com/off-grid-block/fabric-sdk-go/pkg/client/msp"
-	"github.com/off-grid-block/fabric-sdk-go/pkg/client/resmgmt"
-	packager "github.com/off-grid-block/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
-	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk"
-	"github.com/off-grid-block/fabric-sdk-go/test/integration"
-
-	"io/ioutil"
-
-	"bytes"
-
-	"io"
-
-	"time"
-
-	"encoding/pem"
-	"os"
-	"path/filepath"
-
-	"github.com/off-grid-block/fabric-protos-go/common"
-	"github.com/off-grid-block/fabric-protos-go/msp"
-	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp/utils"
-	"github.com/off-grid-block/fabric-sdk-go/pkg/client/channel"
 	msp2 "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/core/config"
+	packager "github.com/off-grid-block/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/resource"
-	"github.com/off-grid-block/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk"
+	"github.com/off-grid-block/fabric-sdk-go/test/integration"
+	"github.com/off-grid-block/fabric-sdk-go/test/metadata"
+	"github.com/off-grid-block/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/policydsl"
 )
 
 const (
@@ -62,9 +57,10 @@ const (
 	ordererOrgName      = "OrdererOrg"
 	channelID           = "orgchannel"
 	configFilename      = "config_test.yaml"
+	revokedPeerURL      = "peer1.org1.example.com:7151"
 	pathRevokeCaRoot    = "peerOrganizations/org1.example.com/ca/"
 	pathParentCert      = "peerOrganizations/org1.example.com/ca/ca.org1.example.com-cert.pem"
-	peerCertToBeRevoked = "peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/signcerts/peer0.org1.example.com-cert.pem"
+	peerCertToBeRevoked = "peerOrganizations/org1.example.com/peers/peer1.org1.example.com/msp/signcerts/peer1.org1.example.com-cert.pem"
 	userCertToBeRevoked = "peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem"
 )
 
@@ -76,10 +72,6 @@ var CRLTestRetryOpts = retry.Opts{
 	RetryableCodes: retry.TestRetryableCodes,
 }
 
-// Peers used for testing
-var orgTestPeer0 fab.Peer
-var orgTestPeer1 fab.Peer
-
 var msps = []string{"Org1MSP", "Org2MSP"}
 
 //TestPeerRevoke performs peer revoke test
@@ -87,7 +79,6 @@ var msps = []string{"Org1MSP", "Org2MSP"}
 // step 2: update MSP revocation_list in channel config
 // step 3: perform revoke peer test
 func TestPeerAndUserRevoke(t *testing.T) {
-
 	var err error
 	//generate CRLs for Peer & User
 	crlBytes := make([][]byte, 2)
@@ -118,9 +109,8 @@ func TestPeerAndUserRevoke(t *testing.T) {
 	updateRevocationList(t, nil)
 }
 
-//joinChannelAndInstallCC joins channel and install/instantiate/query 'exampleCC2'
+//joinChannelAndInstallCC joins channel and install/instantiate/query 'example_cc_fabtest_e2e_2'
 func joinChannelAndInstallCC(t *testing.T) {
-
 	sdk, err := fabsdk.New(config.FromFile(integration.GetConfigPath(configFilename)))
 	require.NoError(t, err)
 	defer sdk.Close()
@@ -134,17 +124,16 @@ func joinChannelAndInstallCC(t *testing.T) {
 	joinChannel(t, sdk)
 
 	//install & instantiate a chaincode before updating revocation list for later test
-	createCC(t, sdk, "exampleCC2", "github.com/example_cc", "0", true)
+	createCC(t, sdk, "example_cc_fabtest_e2e_2", "github.com/example_cc", "0", true)
 
 	//query that chaincode to make sure everything is fine
 	org2UserChannelClientContext := sdk.ChannelContext(channelID, fabsdk.WithUser(org2User), fabsdk.WithOrg(org2))
-	queryCC(t, org2UserChannelClientContext, "exampleCC2", true, "")
+	queryCC(t, org2UserChannelClientContext, "example_cc_fabtest_e2e_2", true, "")
 
 }
 
 //updateRevocationList update MSP revocation_list in channel config
 func updateRevocationList(t *testing.T, crlBytes [][]byte) {
-
 	sdk, err := fabsdk.New(config.FromFile(integration.GetConfigPath(configFilename)))
 	require.NoError(t, err)
 	defer sdk.Close()
@@ -197,35 +186,29 @@ func waitForConfigUpdate(t *testing.T) {
 
 //testRevokedPeer performs revoke peer test
 func testRevokedPeer(t *testing.T) {
-
 	sdk1, err := fabsdk.New(config.FromFile(integration.GetConfigPath(configFilename)))
 	require.NoError(t, err)
 	defer sdk1.Close()
 
 	//prepare contexts
-	org1AdminClientContext := sdk1.Context(fabsdk.WithUser(org1AdminUser), fabsdk.WithOrg(org1))
 	org1UserChannelClientContext := sdk1.ChannelContext(channelID, fabsdk.WithUser(org1User), fabsdk.WithOrg(org1))
 	org2UserChannelClientContext := sdk1.ChannelContext(channelID, fabsdk.WithUser(org2User), fabsdk.WithOrg(org2))
 
 	// Create chaincode package for example cc
-	createCC(t, sdk1, "exampleCC", "github.com/example_cc", "1", false)
-
-	// Load specific targets for move funds test - one of the
-	//targets has its certificate revoked
-	loadOrgPeers(t, org1AdminClientContext)
+	createCC(t, sdk1, "example_cc_fabtest_e2e", "github.com/example_cc", "1", false)
 
 	//query with revoked user
 	t.Log("query with revoked user - should fail with 'access denied'")
-	queryCC(t, org1UserChannelClientContext, "exampleCC", false, "access denied")
+	queryCC(t, org1UserChannelClientContext, "example_cc_fabtest_e2e", false, "access denied")
 	//query with valid user
-	t.Log("query with valid user - should fail with 'chaincode exampleCC not found'")
-	queryCC(t, org2UserChannelClientContext, "exampleCC", false, "chaincode exampleCC not found")
+	t.Log("query with valid user - should fail with 'chaincode example_cc_fabtest_e2e not found'")
+	queryCC(t, org2UserChannelClientContext, "example_cc_fabtest_e2e", false, "chaincode example_cc_fabtest_e2e not found")
 	//query already instantiated chaincode with revoked user
 	t.Log("query already instantiated chaincode with revoked user - should fail with 'access denied'")
-	queryCC(t, org1UserChannelClientContext, "exampleCC2", false, "access denied")
+	queryCC(t, org1UserChannelClientContext, "example_cc_fabtest_e2e_2", false, "access denied")
 	//query already instantiated chaincode with valid user
 	t.Log("query already instantiated chaincode with valid user - should fail with 'signature validation failed'")
-	queryCC(t, org2UserChannelClientContext, "exampleCC2", false, "signature validation failed")
+	queryCC(t, org2UserChannelClientContext, "example_cc_fabtest_e2e_2", false, "signature validation failed")
 }
 
 //testRevokedUser performs revoke peer test
@@ -261,7 +244,6 @@ func testRevokedUser(t *testing.T) {
 
 //prepareReadWriteSets prepares read write sets for channel config update
 func prepareReadWriteSets(t *testing.T, crlBytes [][]byte, ledgerClient *ledger.Client) (*common.ConfigGroup, *common.ConfigGroup) {
-
 	var readSet, writeSet *common.ConfigGroup
 
 	chCfg, err := ledgerClient.QueryConfig(ledger.WithTargetEndpoints("peer1.org2.example.com"))
@@ -321,7 +303,6 @@ func prepareReadWriteSets(t *testing.T, crlBytes [][]byte, ledgerClient *ledger.
 }
 
 func updateChannelConfig(t *testing.T, readSet *common.ConfigGroup, writeSet *common.ConfigGroup, resmgmtClient *resmgmt.Client, org1MspClient, org2MspClient *mspclient.Client) {
-
 	//read block template and update read/write sets
 	txBytes, err := ioutil.ReadFile(integration.GetChannelConfigTxPath("twoorgs.genesis.block"))
 	require.NoError(t, err)
@@ -387,44 +368,7 @@ func createConfigEnvelopeReader(t *testing.T, blockData []byte, configUpdateByte
 }
 
 func joinChannel(t *testing.T, sdk *fabsdk.FabricSDK) {
-
-	joinChannelFunc := func() error {
-
-		org1AdminClientContext := sdk.Context(fabsdk.WithUser(org1AdminUser), fabsdk.WithOrg(org1))
-		org2AdminClientContext := sdk.Context(fabsdk.WithUser(org2AdminUser), fabsdk.WithOrg(org2))
-
-		org1ResMgmt, err := resmgmt.New(org1AdminClientContext)
-		require.NoError(t, err)
-
-		org2ResMgmt, err := resmgmt.New(org2AdminClientContext)
-		require.NoError(t, err)
-
-		// Org1 peers join channel
-		if err := org1ResMgmt.JoinChannel("orgchannel", resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com")); err != nil {
-			return err
-		}
-
-		// Org2 peers join channel
-		if err := org2ResMgmt.JoinChannel("orgchannel", resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com")); err != nil {
-			return err
-		}
-
-		t.Log("joined channel successfully")
-		return nil
-	}
-
-	//join channel
-	err := joinChannelFunc()
-	if err == nil {
-		return
-	}
-
-	if !strings.Contains(err.Error(), "genesis block retrieval failed: Orderer Server Status Code: (404) NOT_FOUND.") {
-		t.Fatalf("Failed to join channel, error : %v", err)
-	}
-
-	t.Logf("Failed to join channel due to : %v, \n Now performing save channel with orderer client and retrying", err)
-
+	var lastConfigBlock uint64
 	ordererClientContext := sdk.Context(fabsdk.WithUser(ordererAdminUser), fabsdk.WithOrg(ordererOrgName))
 
 	ordererResMgmt, err := resmgmt.New(ordererClientContext)
@@ -441,17 +385,60 @@ func joinChannel(t *testing.T, sdk *fabsdk.FabricSDK) {
 
 	org2AdminIdenity, err := org2MspClient.GetSigningIdentity(org2AdminUser)
 	require.NoError(t, err, "failed to get org2AdminIdentity")
+	org1AdminClientContext := sdk.Context(fabsdk.WithUser(org1AdminUser), fabsdk.WithOrg(org1))
+	org2AdminClientContext := sdk.Context(fabsdk.WithUser(org2AdminUser), fabsdk.WithOrg(org2))
+
+	org1ResMgmt, err := resmgmt.New(org1AdminClientContext)
+	require.NoError(t, err)
+
+	org2ResMgmt, err := resmgmt.New(org2AdminClientContext)
+	require.NoError(t, err)
+
+	org1Peers, err := integration.DiscoverLocalPeers(org1AdminClientContext, 1)
+	require.NoError(t, err)
+
+	joined, err := integration.IsJoinedChannel("orgchannel", org1ResMgmt, org1Peers[0])
+	require.NoError(t, err)
+
+	if joined {
+		return
+	}
 
 	req := resmgmt.SaveChannelRequest{ChannelID: "orgchannel",
 		ChannelConfigPath: integration.GetChannelConfigTxPath("orgchannel.tx"),
 		SigningIdentities: []msp2.SigningIdentity{org1AdminIdentity, org2AdminIdenity}}
-	txID, err := ordererResMgmt.SaveChannel(req, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"))
-	require.Nil(t, err, "error should be nil")
-	require.NotEmpty(t, txID, "transaction ID should be populated")
+	ordererResMgmt.SaveChannel(req, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"))
 
-	//Try again now
-	err = joinChannelFunc()
+	req1 := resmgmt.SaveChannelRequest{
+		ChannelID:         "orgchannel",
+		ChannelConfigPath: integration.GetChannelConfigTxPath("orgchannelOrg1MSPanchors.tx"),
+		SigningIdentities: []msp2.SigningIdentity{org1AdminIdentity},
+	}
+	_, err = org1ResMgmt.SaveChannel(req1, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"))
+	require.Nil(t, err, "error should be nil")
+
+	lastConfigBlock = integration.WaitForOrdererConfigUpdate(t, org1ResMgmt, "orgchannel", false, lastConfigBlock)
+
+	req2 := resmgmt.SaveChannelRequest{
+		ChannelID:         "orgchannel",
+		ChannelConfigPath: integration.GetChannelConfigTxPath("orgchannelOrg2MSPanchors.tx"),
+		SigningIdentities: []msp2.SigningIdentity{org2AdminIdenity},
+	}
+	_, err = org2ResMgmt.SaveChannel(req2, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"))
+	require.Nil(t, err, "error should be nil")
+
+	lastConfigBlock = integration.WaitForOrdererConfigUpdate(t, org2ResMgmt, "orgchannel", false, lastConfigBlock)
+
+	// Org1 peers join channel
+	err = org1ResMgmt.JoinChannel("orgchannel", resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"))
 	require.NoError(t, err, "failed to join channel...")
+
+	// Org2 peers join channel
+	err = org2ResMgmt.JoinChannel("orgchannel", resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"))
+	require.NoError(t, err, "failed to join channel...")
+
+	t.Log("joined channel successfully")
+	return
 
 }
 
@@ -468,7 +455,7 @@ func queryCC(t *testing.T, channelClientContext contextAPI.ChannelProvider, ccID
 	}
 
 	resp, err := chClientOrg1User.Query(channel.Request{ChaincodeID: ccID, Fcn: "invoke", Args: integration.ExampleCCDefaultQueryArgs()},
-		channel.WithRetry(retry.DefaultChannelOpts), channel.WithTargetEndpoints("peer0.org1.example.com"))
+		channel.WithRetry(retry.TestRetryOpts), channel.WithTargetEndpoints("peer1.org1.example.com"))
 
 	if success {
 		require.NoError(t, err)
@@ -477,7 +464,7 @@ func queryCC(t *testing.T, channelClientContext contextAPI.ChannelProvider, ccID
 		require.Equal(t, "200", string(resp.Payload))
 	} else {
 		if err == nil || !strings.Contains(err.Error(), expectedMsg) {
-			t.Fatalf("Expected error: '%s' , but got '%s'", expectedMsg, err)
+			t.Fatalf("Expected error: '%s' , but got '%v'", expectedMsg, err)
 		}
 		_, ok := status.FromError(err)
 		assert.True(t, ok, "Expected status error")
@@ -485,7 +472,6 @@ func queryCC(t *testing.T, channelClientContext contextAPI.ChannelProvider, ccID
 }
 
 func createCC(t *testing.T, sdk1 *fabsdk.FabricSDK, name, path, version string, success bool) {
-
 	org1AdminClientContext := sdk1.Context(fabsdk.WithUser(org1AdminUser), fabsdk.WithOrg(org1))
 	org2AdminClientContext := sdk1.Context(fabsdk.WithUser(org2AdminUser), fabsdk.WithOrg(org2))
 
@@ -495,72 +481,102 @@ func createCC(t *testing.T, sdk1 *fabsdk.FabricSDK, name, path, version string, 
 	org2ResMgmt, err := resmgmt.New(org2AdminClientContext)
 	require.NoError(t, err)
 
-	ccPkg, err := packager.NewCCPackage(path, integration.GetDeployPath())
-	if err != nil {
-		t.Fatal(err)
-	}
-	installCCReq := resmgmt.InstallCCRequest{Name: name, Path: path, Version: version, Package: ccPkg}
-	// Install example cc to Org1 peers
-	_, err = org1ResMgmt.InstallCC(installCCReq)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// Install example cc to Org2 peers
-	_, err = org2ResMgmt.InstallCC(installCCReq, resmgmt.WithRetry(retry.DefaultResMgmtOpts))
-	if err != nil {
-		t.Fatal(err)
-	}
-	// Set up chaincode policy to 'two-of-two msps'
-	ccPolicy, err := cauthdsl.FromString("AND ('Org1MSP.member','Org2MSP.member')")
-	require.NoErrorf(t, err, "Error creating cc policy with both orgs to approve")
-	// Org1 resource manager will instantiate 'example_cc' on 'orgchannel'
-	resp, err := org1ResMgmt.InstantiateCC(
-		"orgchannel",
-		resmgmt.InstantiateCCRequest{
-			Name:    name,
-			Path:    path,
-			Version: version,
-			Args:    integration.ExampleCCInitArgs(),
-			Policy:  ccPolicy,
-		},
-		resmgmt.WithTargetEndpoints("peer0.org1.example.com", "peer0.org2.example.com"),
-	)
+	if metadata.CCMode == "lscc" {
 
-	if success {
-		require.NoError(t, err)
-		require.NotEmpty(t, resp.TransactionID)
+		ccPkg, err := packager.NewCCPackage(path, integration.GetDeployPath())
+		if err != nil {
+			t.Fatal(err)
+		}
+		installCCReq := resmgmt.InstallCCRequest{Name: name, Path: path, Version: version, Package: ccPkg}
+		// Install example cc to Org1 peers
+		_, err = org1ResMgmt.InstallCC(installCCReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// Install example cc to Org2 peers
+		_, err = org2ResMgmt.InstallCC(installCCReq, resmgmt.WithRetry(retry.DefaultResMgmtOpts))
+		if err != nil {
+			t.Fatal(err)
+		}
+		// Set up chaincode policy to 'two-of-two msps'
+		ccPolicy, err := policydsl.FromString("AND ('Org1MSP.member','Org2MSP.member')")
+		require.NoErrorf(t, err, "Error creating cc policy with both orgs to approve")
+		// Org1 resource manager will instantiate 'example_cc' on 'orgchannel'
+		resp, err := org1ResMgmt.InstantiateCC(
+			"orgchannel",
+			resmgmt.InstantiateCCRequest{
+				Name:    name,
+				Path:    path,
+				Version: version,
+				Args:    integration.ExampleCCInitArgs(),
+				Policy:  ccPolicy,
+			},
+			resmgmt.WithTargetEndpoints("peer1.org1.example.com", "peer0.org2.example.com"),
+		)
+
+		if success {
+			require.NoError(t, err)
+			require.NotEmpty(t, resp.TransactionID)
+		} else {
+			require.Errorf(t, err, "Expecting error instantiating CC on peer with revoked certificate")
+			stat, ok := status.FromError(err)
+			require.Truef(t, ok, "Expecting error to be a status error, but got ", err)
+			require.Equalf(t, stat.Code, int32(status.SignatureVerificationFailed), "Expecting signature verification error due to revoked cert, but got", err)
+			require.Truef(t, strings.Contains(err.Error(), "the creator certificate is not valid"), "Expecting error message to contain 'the creator certificate is not valid' but got", err)
+		}
 	} else {
-		require.Errorf(t, err, "Expecting error instantiating CC on peer with revoked certificate")
-		stat, ok := status.FromError(err)
-		require.Truef(t, ok, "Expecting error to be a status error, but got ", err)
-		require.Equalf(t, stat.Code, int32(status.SignatureVerificationFailed), "Expecting signature verification error due to revoked cert, but got", err)
-		require.Truef(t, strings.Contains(err.Error(), "the creator certificate is not valid"), "Expecting error message to contain 'the creator certificate is not valid' but got", err)
+		orgsContext := setupOrgContext(t, sdk1, org1AdminClientContext, org2AdminClientContext, org1ResMgmt, org2ResMgmt)
+		err = integration.InstantiateExampleChaincodeLc(sdk1, orgsContext, "orgchannel", name, "AND('Org1MSP.member','Org2MSP.member')")
+		if success {
+			require.NoError(t, err)
+		} else {
+			require.Errorf(t, err, "Expecting error instantiating CC on peer with revoked certificate")
+			stat, ok := status.FromError(err)
+			require.Truef(t, ok, "Expecting error to be a status error, but got ", err)
+			require.Equalf(t, stat.Code, int32(status.SignatureVerificationFailed), "Expecting signature verification error due to revoked cert, but got", err)
+			require.Truef(t, strings.Contains(err.Error(), "the creator certificate is not valid"), "Expecting error message to contain 'the creator certificate is not valid' but got", err)
+		}
 	}
 }
 
-func loadOrgPeers(t *testing.T, ctxProvider contextAPI.ClientProvider) {
+func setupOrgContext(t *testing.T, sdk1 *fabsdk.FabricSDK, org1AdminContext, org2AdminContext contextAPI.ClientProvider, org1ResMgmt, org2ResMgmt *resmgmt.Client) []*integration.OrgContext {
 
-	ctx, err := ctxProvider()
-	if err != nil {
-		t.Fatalf("context creation failed: %s", err)
+	sdk := sdk1
+	org1MspClient, err := mspclient.New(sdk.Context(), mspclient.WithOrg(org1))
+	require.NoError(t, err)
+	org1AdminUser, err := org1MspClient.GetSigningIdentity(org1AdminUser)
+	require.NoError(t, err)
+
+	org2MspClient, err := mspclient.New(sdk.Context(), mspclient.WithOrg(org2))
+	require.NoError(t, err)
+	org2AdminUser, err := org2MspClient.GetSigningIdentity(org2AdminUser)
+	require.NoError(t, err)
+
+	// Ensure that Gossip has propagated it's view of local peers before invoking
+	// install since some peers may be missed if we call InstallCC too early
+	org1Peers, err := integration.DiscoverLocalPeers(org1AdminContext, 2)
+	require.NoError(t, err)
+	org2Peers, err := integration.DiscoverLocalPeers(org2AdminContext, 2)
+	require.NoError(t, err)
+
+	return []*integration.OrgContext{
+		{
+			OrgID:                org1,
+			CtxProvider:          org1AdminContext,
+			ResMgmt:              org1ResMgmt,
+			Peers:                org1Peers,
+			SigningIdentity:      org1AdminUser,
+			AnchorPeerConfigFile: "orgchannelOrg1MSPanchors.tx",
+		},
+		{
+			OrgID:                org2,
+			CtxProvider:          org2AdminContext,
+			ResMgmt:              org2ResMgmt,
+			Peers:                org2Peers,
+			SigningIdentity:      org2AdminUser,
+			AnchorPeerConfigFile: "orgchannelOrg2MSPanchors.tx",
+		},
 	}
-
-	org1Peers, ok := ctx.EndpointConfig().PeersConfig(org1)
-	assert.True(t, ok)
-
-	org2Peers, ok := ctx.EndpointConfig().PeersConfig(org2)
-	assert.True(t, ok)
-
-	orgTestPeer0, err = ctx.InfraProvider().CreatePeerFromConfig(&fab.NetworkPeer{PeerConfig: org1Peers[0]})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	orgTestPeer1, err = ctx.InfraProvider().CreatePeerFromConfig(&fab.NetworkPeer{PeerConfig: org2Peers[0]})
-	if err != nil {
-		t.Fatal(err)
-	}
-
 }
 
 func queryRevocationListUpdates(t *testing.T, client *ledger.Client, config fab.EndpointConfig, chID string) bool {
@@ -583,6 +599,10 @@ func isChannelConfigUpdated(t *testing.T, client *ledger.Client, config fab.Endp
 	t.Logf("Performing config update check on %d channel peers in channel '%s'", len(chPeers), chID)
 	updated := len(chPeers) > 0
 	for _, chPeer := range chPeers {
+		if chPeer.URL == revokedPeerURL {
+			continue
+		}
+
 		t.Logf("waiting for [%s] msp update", chPeer.URL)
 		chCfg, err := client.QueryConfig(ledger.WithTargetEndpoints(chPeer.URL))
 		if err != nil || len(chCfg.MSPs()) == 0 {
@@ -597,7 +617,7 @@ func isChannelConfigUpdated(t *testing.T, client *ledger.Client, config fab.Endp
 			if fabMspCfg.Name == "OrdererMSP" {
 				continue
 			}
-			t.Logf("length of revocation list found in peer[%s] is %d", chPeer.URL, len(fabMspCfg.RevocationList))
+			t.Logf("length of revocation list found for MSP[%s] in peer[%s] is %d", fabMspCfg.Name, chPeer.URL, len(fabMspCfg.RevocationList))
 			updated = updated && len(fabMspCfg.RevocationList) > 1
 		}
 	}
@@ -643,13 +663,12 @@ func generateCRL(cerPath string) ([]byte, error) {
 }
 
 func loadPrivateKey(path string) (interface{}, error) {
-
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	key, err := utils.PEMtoPrivateKey(raw, []byte(""))
+	key, err := keyutil.PEMToPrivateKey(raw, []byte(""))
 	if err != nil {
 		return nil, err
 	}
@@ -658,7 +677,6 @@ func loadPrivateKey(path string) (interface{}, error) {
 }
 
 func loadCert(path string) (*x509.Certificate, error) {
-
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -673,7 +691,6 @@ func loadCert(path string) (*x509.Certificate, error) {
 }
 
 func revokeCert(certToBeRevoked *x509.Certificate, parentCert *x509.Certificate, parentKey interface{}) ([]byte, error) {
-
 	//Create a revocation record for the user
 	clientRevocation := pkix.RevokedCertificate{
 		SerialNumber:   certToBeRevoked.SerialNumber,

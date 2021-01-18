@@ -14,14 +14,14 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/channelconfig"
-	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/tools/protolator"
 	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/protoutil"
 	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkinternal/configtxgen/encoder"
 	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkinternal/configtxlator/update"
 	"github.com/pkg/errors"
 
-	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkinternal/configtxgen/localconfig"
+	localconfig "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkinternal/configtxgen/genesisconfig"
 
+	"github.com/hyperledger/fabric-config/protolator"
 	"github.com/off-grid-block/fabric-protos-go/common"
 	cb "github.com/off-grid-block/fabric-protos-go/common"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/resource/genesisconfig"

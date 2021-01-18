@@ -19,7 +19,6 @@ import (
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/events/deliverclient/connection"
 	esdispatcher "github.com/off-grid-block/fabric-sdk-go/pkg/fab/events/service/dispatcher"
 	"github.com/pkg/errors"
-
 )
 
 var logger = logging.NewLogger("fabsdk/fab")

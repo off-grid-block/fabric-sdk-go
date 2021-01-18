@@ -68,6 +68,7 @@ func New(channelProvider context.ChannelProvider, opts ...ClientOption) (*Client
 	} else {
 		es, err = channelContext.ChannelService().EventService()
 	}
+
 	if err != nil {
 		return nil, errors.WithMessage(err, "event service creation failed")
 	}

@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"strings"
 
-	fabricCaUtil "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/util"
+	fabricCaUtil "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkinternal/pkg/util"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/core/config/cryptoutil"
@@ -19,11 +19,19 @@ import (
 )
 
 func newUser(userData *msp.UserData, cryptoSuite core.CryptoSuite) (*User, error) {
+	pubKey, err := cryptoutil.GetPublicKeyFromCert(userData.EnrollmentCertificate, cryptoSuite)
+	if err != nil {
+		return nil, errors.WithMessage(err, "fetching public key from cert failed")
+	}
+	pk, err := cryptoSuite.GetKey(pubKey.SKI())
+	if err != nil {
+		return nil, errors.WithMessage(err, "cryptoSuite GetKey failed")
+	}
 	u := &User{
 		id:                    userData.ID,
 		mspID:                 userData.MSPID,
 		enrollmentCertificate: userData.EnrollmentCertificate,
-		privateKey:            nil,
+		privateKey:            pk,
 	}
 	return u, nil
 }
@@ -42,7 +50,6 @@ func (mgr *IdentityManager) loadUserFromStore(username string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	//Here we are fetching the public key of the user. Validate user certificate
 	user, err = mgr.NewUser(userData)
 	if err != nil {
 		return nil, err

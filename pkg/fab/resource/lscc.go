@@ -41,7 +41,7 @@ func CreateChaincodeInstallProposal(txh fab.TransactionHeader, request Chaincode
 		return nil, errors.WithMessage(err, "creating lscc install invocation request failed")
 	}
 
-	return txn.CreateChaincodeInvokeProposal(txh, cir, false)
+	return txn.CreateChaincodeInvokeProposal(txh, cir)
 }
 
 func createInstallInvokeRequest(request ChaincodeInstallRequest) (fab.ChaincodeInvokeRequest, error) {

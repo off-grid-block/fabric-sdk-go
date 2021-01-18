@@ -11,6 +11,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -28,12 +29,13 @@ import (
 )
 
 var (
-	binaryRegExp         = regexp.MustCompile("(.*)_(.*)")
+	binaryRegExp         = regexp.MustCompile("(.*)_fabtest_(.*)")
 	containerCreateRegEx = regexp.MustCompile("/containers/create")
 	containerNameRegEx   = regexp.MustCompile("(.*)-(.*)-(.*)-(.*)")
 	containerStartRegEx  = regexp.MustCompile("/containers/(.+)/start")
 	containerUploadRegEx = regexp.MustCompile("/containers/(.+)/archive")
 	waitUploadRegEx      = regexp.MustCompile("/containers/(.+)/wait")
+	inspectImageRegEx    = regexp.MustCompile("/images/(.+)/json")
 )
 
 var peerEndpoints map[string]string
@@ -123,16 +125,16 @@ func createChaincodeCmd(ccParams *chaincodeParams, tlsPath string) *exec.Cmd {
 	keyPath := filepath.Join(tlsPath, "client.key")
 	certPath := filepath.Join(tlsPath, "client.crt")
 
-	cmd := exec.Command(ccParams.chaincodeBinary(), tlsPath)
+	peerAddrArg := fmt.Sprintf("-peer.address=%s", ccParams.peerAddr())
+
+	cmd := exec.Command(ccParams.chaincodeBinary(), peerAddrArg)
 	cmd.Stderr = os.Stderr
 	cmd.Env = append(os.Environ(),
-		"CORE_PEER_ADDRESS="+ccParams.peerAddr(),
 		"CORE_CHAINCODE_ID_NAME="+ccParams.chaincodeID(),
 		"CORE_PEER_TLS_ENABLED=TRUE",
 		"CORE_PEER_TLS_ROOTCERT_FILE="+rootCertFile,
 		"CORE_TLS_CLIENT_KEY_PATH="+keyPath,
 		"CORE_TLS_CLIENT_CERT_PATH="+certPath,
-		"CORE_CHAINCODE_LOGGING_LEVEL="+getChaincodeLoggingLevel(),
 	)
 
 	// Chaincode and shim logs are output through Stderr.
@@ -242,6 +244,14 @@ func (d *chaincoded) handleOtherRequest(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(200)
 }
 
+func (d *chaincoded) handleInspectImage(w http.ResponseWriter, r *http.Request) {
+	respBody := []byte("{}")
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	w.Write(respBody)
+}
+
 func (d *chaincoded) handleWaitRequest(w http.ResponseWriter, r *http.Request) {
 	select {}
 }
@@ -305,6 +315,7 @@ func (d *chaincoded) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	uploadMatches := containerUploadRegEx.FindStringSubmatch(r.URL.Path)
 	createMatches := containerCreateRegEx.FindStringSubmatch(r.URL.Path)
 	waitMatches := waitUploadRegEx.FindStringSubmatch(r.URL.Path)
+	inspectMatches := inspectImageRegEx.FindStringSubmatch(r.URL.Path)
 
 	logDebugf("Handling HTTP request [%s]", r.URL)
 	if startMatches != nil {
@@ -316,6 +327,8 @@ func (d *chaincoded) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else if waitMatches != nil {
 		logDebugf("Handling handleWaitRequest")
 		d.handleWaitRequest(w, r)
+	} else if inspectMatches != nil {
+		d.handleInspectImage(w, r)
 	} else {
 		d.handleOtherRequest(w, r)
 	}

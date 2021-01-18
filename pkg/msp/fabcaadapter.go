@@ -11,10 +11,10 @@ import (
 
 	"encoding/json"
 
-	caapi "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/api"
 	calib "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib"
 	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/client/credential"
 	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/client/credential/x509"
+	caapi "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkinternal/pkg/api"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/core/config/endpoint"
@@ -56,6 +56,7 @@ func (c *fabricCAAdapter) Enroll(request *api.EnrollmentRequest) ([]byte, error)
 		Profile: request.Profile,
 		Type:    request.Type,
 		Label:   request.Label,
+		CSR:     createCSRInfo(request.CSR),
 	}
 
 	if len(request.AttrReqs) > 0 {
@@ -65,9 +66,10 @@ func (c *fabricCAAdapter) Enroll(request *api.EnrollmentRequest) ([]byte, error)
 		}
 		careq.AttrReqs = attrs
 	}
-	caresp, err := c.caClient.Enroll(careq) 
+
+	caresp, err := c.caClient.Enroll(careq)
 	if err != nil {
-		return nil, errors.WithMessage(err, "enroll failed1")
+		return nil, errors.WithMessage(err, "enroll failed")
 	}
 	return caresp.Identity.GetECert().Cert(), nil
 }
@@ -81,6 +83,7 @@ func (c *fabricCAAdapter) Reenroll(key core.Key, cert []byte, request *api.Reenr
 		CAName:  c.caClient.Config.CAName,
 		Profile: request.Profile,
 		Label:   request.Label,
+		CSR:     createCSRInfo(request.CSR),
 	}
 	if len(request.AttrReqs) > 0 {
 		attrs := make([]*caapi.AttributeRequest, len(request.AttrReqs))
@@ -148,6 +151,7 @@ func (c *fabricCAAdapter) Revoke(key core.Key, cert []byte, request *api.Revocat
 		Serial: request.Serial,
 		AKI:    request.AKI,
 		Reason: request.Reason,
+		GenCRL: request.GenCRL,
 	}
 
 	registrar, err := c.newIdentity(key, cert)
@@ -530,6 +534,18 @@ func fillAffiliationInfo(info *api.AffiliationInfo, name string, affiliations []
 	return nil
 }
 
+func createCSRInfo(csr *api.CSRInfo) *caapi.CSRInfo {
+	if csr == nil {
+		// csr is not obrigatory, so we can return nil
+		return nil
+	}
+
+	return &caapi.CSRInfo{
+		CN:    csr.CN,
+		Hosts: csr.Hosts,
+	}
+}
+
 func getAllAttributes(attrs []caapi.Attribute) []api.Attribute {
 	attriburtes := []api.Attribute{}
 	for _, attr := range attrs {
@@ -611,6 +627,12 @@ func createFabricCAClient(caID string, cryptoSuite core.CryptoSuite, config msp.
 		return nil, errors.Errorf("CA '%s' has no corresponding client keys in the configs", caID)
 	}
 
+	var err error
+	c.Config.TLS.TlsCertPool, err = config.TLSCACertPool().Get()
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't load configured cert pool")
+	}
+
 	//TLS flag enabled/disabled
 	c.Config.TLS.Enabled = endpoint.IsTLSEnabled(conf.URL)
 	c.Config.MSPDir = config.CAKeyStorePath()
@@ -618,7 +640,7 @@ func createFabricCAClient(caID string, cryptoSuite core.CryptoSuite, config msp.
 	//Factory opts
 	c.Config.CSP = cryptoSuite
 
-	err := c.Init()
+	err = c.Init()
 	if err != nil {
 		return nil, errors.Wrap(err, "CA Client init failed")
 	}

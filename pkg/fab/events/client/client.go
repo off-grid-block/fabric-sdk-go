@@ -210,7 +210,7 @@ func (c *Client) connect() error {
 
 	logger.Debug("Submitting connection request...")
 
-	errch := make(chan error)
+	errch := make(chan error, 1)
 	err1 := c.Submit(dispatcher.NewConnectEvent(errch))
 	if err1 != nil {
 		return errors.Errorf("Submit failed %s", err1)
@@ -288,6 +288,10 @@ func (c *Client) connectWithRetry(maxAttempts uint, timeBetweenAttempts time.Dur
 
 	var attempts uint
 	for {
+		if c.Stopped() {
+			return errors.New("event client is closed")
+		}
+
 		attempts++
 		logger.Debugf("Attempt #%d to connect...", attempts)
 		if err := c.connect(); err != nil {
@@ -411,8 +415,10 @@ func (c *Client) reconnect() {
 	}
 
 	if err := c.connectWithRetry(c.maxReconnAttempts, c.timeBetweenConnAttempts); err != nil {
-		logger.Warnf("Could not reconnect event client: %s. Closing.", err)
-		c.Close()
+		logger.Warnf("Could not reconnect event client: %s", err)
+		if !c.Stopped() {
+			c.Close()
+		}
 	} else {
 		logger.Infof("Event client has reconnected")
 	}

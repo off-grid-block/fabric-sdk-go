@@ -44,7 +44,6 @@ func WithCreator(creator []byte) TxnHeaderOpt {
 type ProposalSender interface {
 	CreateTransactionHeader(opts ...TxnHeaderOpt) (TransactionHeader, error)
 	SendTransactionProposal(*TransactionProposal, []ProposalProcessor) ([]*TransactionProposalResponse, error)
-	SendTransactionProposalIndy(*TransactionProposal, []ProposalProcessor, bool, string) ([]*TransactionProposalResponse, error)
 }
 
 // TransactionID provides the identifier of a Fabric transaction proposal.
@@ -62,15 +61,17 @@ type TransactionHeader interface {
 	Creator() []byte
 	Nonce() []byte
 	ChannelID() string
-	Did() string
 }
 
 // ChaincodeInvokeRequest contains the parameters for sending a transaction proposal.
+// nolint: maligned
 type ChaincodeInvokeRequest struct {
 	ChaincodeID  string
+	Lang         pb.ChaincodeSpec_Type
 	TransientMap map[string][]byte
 	Fcn          string
 	Args         [][]byte
+	IsInit       bool
 }
 
 // TransactionProposal contains a marashalled transaction proposal.

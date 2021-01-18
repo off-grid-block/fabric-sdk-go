@@ -18,7 +18,6 @@ import (
 	"github.com/off-grid-block/fabric-protos-go/common"
 	pb "github.com/off-grid-block/fabric-protos-go/peer"
 	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/crypto"
-	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/protoutil"
 	contextApi "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/core/cryptosuite"
@@ -30,7 +29,6 @@ type TransactionHeader struct {
 	creator   []byte
 	nonce     []byte
 	channelID string
-	did       string
 }
 
 // TransactionID returns the transaction's computed identifier.
@@ -51,11 +49,6 @@ func (th *TransactionHeader) Nonce() []byte {
 // ChannelID returns the transaction's target channel identifier.
 func (th *TransactionHeader) ChannelID() string {
 	return th.channelID
-}
-
-// Did returns the did value of the user
-func (th *TransactionHeader) Did() string {
-	return th.did
 }
 
 // NewHeader computes a TransactionID from the current user context and holds
@@ -85,8 +78,6 @@ func NewHeader(ctx contextApi.Client, channelID string, opts ...fab.TxnHeaderOpt
 		}
 	}
 
-	identity := ctx.Identifier()
-
 	ho := cryptosuite.GetSHA256Opts() // TODO: make configurable
 	h, err := ctx.CryptoSuite().GetHash(ho)
 	if err != nil {
@@ -98,29 +89,11 @@ func NewHeader(ctx contextApi.Client, channelID string, opts ...fab.TxnHeaderOpt
 		return nil, errors.WithMessage(err, "txn ID computation failed")
 	}
 
-	if identity.ID != "Admin" {
-		im, _ := ctx.IdentityManager("org1")
-		si, err := im.GetSigningIdentity(identity.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		txnID := TransactionHeader{
-			id:        fab.TransactionID(id),
-			creator:   nil,
-			nonce:     nonce,
-			channelID: channelID,
-			did:       string(si.EnrollmentCertificate()),
-		}
-		return &txnID, nil
-	}
-
 	txnID := TransactionHeader{
 		id:        fab.TransactionID(id),
 		creator:   creator,
 		nonce:     nonce,
 		channelID: channelID,
-		did:       "",
 	}
 
 	return &txnID, nil
@@ -145,24 +118,13 @@ func signPayload(ctx contextApi.Client, payload *common.Payload) (*fab.SignedEnv
 	if err != nil {
 		return nil, errors.WithMessage(err, "marshaling of payload failed")
 	}
-	sighdrbytes := payload.Header.SignatureHeader
-	shdr, _ := protoutil.UnmarshalSignatureHeader(sighdrbytes)
-	//
-	if shdr.Did != nil {
-		signingMgr := ctx.SigningManager()
-		signature, err := signingMgr.Sign(payloadBytes, ctx.PrivateKey(), true, string(shdr.Did))
-		if err != nil {
-			return nil, errors.WithMessage(err, "signing of payload BY INDY failed")
-		}
-		return &fab.SignedEnvelope{Payload: payloadBytes, Signature: signature}, nil
-	} else {
-		signingMgr := ctx.SigningManager()
-		signature, err := signingMgr.Sign(payloadBytes, ctx.PrivateKey(), false, "")
-		if err != nil {
-			return nil, errors.WithMessage(err, "signing of payload BY FABRIC failed")
-		}
-		return &fab.SignedEnvelope{Payload: payloadBytes, Signature: signature}, nil
+
+	signingMgr := ctx.SigningManager()
+	signature, err := signingMgr.Sign(payloadBytes, ctx.PrivateKey())
+	if err != nil {
+		return nil, errors.WithMessage(err, "signing of payload failed")
 	}
+	return &fab.SignedEnvelope{Payload: payloadBytes, Signature: signature}, nil
 }
 
 // ChannelHeaderOpts holds the parameters to create a ChannelHeader.

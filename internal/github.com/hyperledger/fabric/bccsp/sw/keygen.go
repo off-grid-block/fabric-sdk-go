@@ -24,7 +24,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/rsa"
 	"fmt"
 
 	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
@@ -40,7 +39,7 @@ func (kg *ecdsaKeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
 		return nil, fmt.Errorf("Failed generating ECDSA key for [%v]: [%s]", kg.curve, err)
 	}
 
-	return &ecdsaPrivateKey{privKey}, nil
+	return &ecdsaPrivateKey{privKey, true}, nil
 }
 
 type aesKeyGenerator struct {
@@ -54,18 +53,4 @@ func (kg *aesKeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
 	}
 
 	return &aesPrivateKey{lowLevelKey, false}, nil
-}
-
-type rsaKeyGenerator struct {
-	length int
-}
-
-func (kg *rsaKeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
-	lowLevelKey, err := rsa.GenerateKey(rand.Reader, int(kg.length))
-
-	if err != nil {
-		return nil, fmt.Errorf("Failed generating RSA %d key [%s]", kg.length, err)
-	}
-
-	return &rsaPrivateKey{lowLevelKey}, nil
 }

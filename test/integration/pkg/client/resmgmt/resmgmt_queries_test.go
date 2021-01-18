@@ -12,6 +12,7 @@ import (
 	"github.com/off-grid-block/fabric-sdk-go/pkg/client/resmgmt"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk"
+	"github.com/off-grid-block/fabric-sdk-go/test/metadata"
 )
 
 func TestResMgmtClientQueries(t *testing.T) {
@@ -41,40 +42,74 @@ func TestResMgmtClientQueries(t *testing.T) {
 
 	testQueryChannels(t, testSetup.ChannelID, target, client)
 
+	// TODO java and node integration tests need to be fixed.
+	/*
+		// test java chaincode installed and instantiated
+		javaCCID := integration.GenerateExampleJavaID(false)
+
+		testInstalledChaincodes(t, javaCCID, target, client)
+
+		testInstantiatedChaincodes(t, orgChannelID, javaCCID, target, client)
+
+		// test node chaincode installed and instantiated
+		nodeCCID := integration.GenerateExampleNodeID(false)
+
+		testInstalledChaincodes(t, nodeCCID, target, client)
+
+		testInstantiatedChaincodes(t, orgChannelID, nodeCCID, target, client)
+
+	*/
 }
 
 func testInstantiatedChaincodes(t *testing.T, channelID string, ccID string, target string, client *resmgmt.Client) {
-
-	chaincodeQueryResponse, err := client.QueryInstantiatedChaincodes(channelID, resmgmt.WithTargetEndpoints(target), resmgmt.WithRetry(retry.DefaultResMgmtOpts))
-	if err != nil {
-		t.Fatalf("QueryInstantiatedChaincodes return error: %s", err)
-	}
-
-	found := false
-	for _, chaincode := range chaincodeQueryResponse.Chaincodes {
-		t.Logf("**InstantiatedCC: %s", chaincode)
-		if chaincode.Name == ccID {
-			found = true
+	if metadata.CCMode == "lscc" {
+		chaincodeQueryResponse, err := client.QueryInstantiatedChaincodes(channelID, resmgmt.WithTargetEndpoints(target), resmgmt.WithRetry(retry.DefaultResMgmtOpts))
+		if err != nil {
+			t.Fatalf("QueryInstantiatedChaincodes return error: %s", err)
 		}
-	}
 
-	if !found {
-		t.Fatalf("QueryInstantiatedChaincodes failed to find instantiated %s chaincode", ccID)
+		found := false
+		for _, chaincode := range chaincodeQueryResponse.Chaincodes {
+			t.Logf("**InstantiatedCC: %s", chaincode)
+			if chaincode.Name == ccID {
+				found = true
+			}
+		}
+
+		if !found {
+			t.Fatalf("QueryInstantiatedChaincodes failed to find instantiated %s chaincode", ccID)
+		}
 	}
 }
 
 func testInstalledChaincodes(t *testing.T, ccID string, target string, client *resmgmt.Client) {
-
-	chaincodeQueryResponse, err := client.QueryInstalledChaincodes(resmgmt.WithTargetEndpoints(target), resmgmt.WithRetry(retry.DefaultResMgmtOpts))
-	if err != nil {
-		t.Fatalf("QueryInstalledChaincodes return error: %s", err)
-	}
-
 	found := false
-	for _, chaincode := range chaincodeQueryResponse.Chaincodes {
-		t.Logf("**InstalledCC: %s", chaincode)
-		if chaincode.Name == ccID {
-			found = true
+	if metadata.CCMode == "lscc" {
+		chaincodeQueryResponse, err := client.QueryInstalledChaincodes(resmgmt.WithTargetEndpoints(target), resmgmt.WithRetry(retry.DefaultResMgmtOpts))
+		if err != nil {
+			t.Fatalf("QueryInstalledChaincodes return error: %s", err)
+		}
+
+		for _, chaincode := range chaincodeQueryResponse.Chaincodes {
+			t.Logf("**InstalledCC: %s", chaincode)
+			if chaincode.Name == ccID {
+				found = true
+			}
+		}
+	} else {
+		chaincodeQueryResponse, err := client.LifecycleQueryInstalledCC(resmgmt.WithTargetEndpoints(target), resmgmt.WithRetry(retry.DefaultResMgmtOpts))
+		if err != nil {
+			t.Fatalf("QueryInstalledChaincodes return error: %s", err)
+		}
+
+		for _, re := range chaincodeQueryResponse {
+			for _, cc := range re.References {
+				for _, c := range cc {
+					if c.Name == ccID {
+						found = true
+					}
+				}
+			}
 		}
 	}
 

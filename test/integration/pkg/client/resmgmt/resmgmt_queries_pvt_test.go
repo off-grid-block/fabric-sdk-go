@@ -7,14 +7,18 @@ SPDX-License-Identifier: Apache-2.0
 package resmgmt
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/client/resmgmt"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/retry"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk"
 	"github.com/off-grid-block/fabric-sdk-go/test/integration"
-	"github.com/off-grid-block/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
-	cb "github.com/off-grid-block/fabric-protos-go/common"
+	"github.com/off-grid-block/fabric-sdk-go/test/metadata"
+	"github.com/off-grid-block/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/policydsl"
 	"github.com/stretchr/testify/require"
 )
 
@@ -27,6 +31,10 @@ const (
 )
 
 func TestQueryCollectionsConfig(t *testing.T) {
+
+	if metadata.CCMode != "lscc" {
+		t.Skip("this test is only valid for legacy chaincode")
+	}
 	sdk := mainSDK
 
 	orgsContext := setupMultiOrgContext(t, sdk)
@@ -36,7 +44,6 @@ func TestQueryCollectionsConfig(t *testing.T) {
 	ccID := integration.GenerateExamplePvtID(true)
 	collConfig, err := newCollectionConfig(collCfgName, collCfgPolicy, collCfgRequiredPeerCount, collCfgMaximumPeerCount, collCfgBlockToLive)
 	require.NoError(t, err)
-
 	err = integration.InstallExamplePvtChaincode(orgsContext, ccID)
 	require.NoError(t, err)
 	err = integration.InstantiateExamplePvtChaincode(orgsContext, orgChannelID, ccID, "OR('Org1MSP.member','Org2MSP.member')", collConfig)
@@ -47,8 +54,17 @@ func TestQueryCollectionsConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create new resource management client: %s", err)
 	}
+	resp1, err := retry.NewInvoker(retry.New(retry.TestRetryOpts)).Invoke(
+		func() (interface{}, error) {
+			resp1, err := client.QueryCollectionsConfig(orgChannelID, ccID)
+			if err != nil {
+				return nil, status.New(status.TestStatus, status.GenericTransient.ToInt32(), fmt.Sprintf("QueryCollectionsConfig returned : %v", resp1), nil)
+			}
+			return resp1, err
+		},
+	)
+	resp := resp1.(*pb.CollectionConfigPackage)
 
-	resp, err := client.QueryCollectionsConfig(orgChannelID, ccID)
 	if err != nil {
 		t.Fatalf("QueryCollectionsConfig return error: %s", err)
 	}
@@ -58,14 +74,15 @@ func TestQueryCollectionsConfig(t *testing.T) {
 
 	conf := resp.Config[0]
 	switch cconf := conf.Payload.(type) {
-	case *cb.CollectionConfig_StaticCollectionConfig:
+	case *pb.CollectionConfig_StaticCollectionConfig:
 		checkStaticCollectionConfig(t, cconf.StaticCollectionConfig)
 	default:
 		t.Fatalf("The CollectionConfig.Payload's type is incorrect, expected `CollectionConfig_StaticCollectionConfig`, got %+v", reflect.TypeOf(conf.Payload))
 	}
+
 }
 
-func checkStaticCollectionConfig(t *testing.T, collConf *cb.StaticCollectionConfig) {
+func checkStaticCollectionConfig(t *testing.T, collConf *pb.StaticCollectionConfig) {
 	if collConf.Name != collCfgName {
 		t.Fatalf("CollectionConfig'name is incorrect, expected collection1, got %s", collConf.Name)
 	}
@@ -83,19 +100,19 @@ func checkStaticCollectionConfig(t *testing.T, collConf *cb.StaticCollectionConf
 	}
 }
 
-func newCollectionConfig(colName, policy string, reqPeerCount, maxPeerCount int32, blockToLive uint64) (*cb.CollectionConfig, error) {
-	p, err := cauthdsl.FromString(policy)
+func newCollectionConfig(colName, policy string, reqPeerCount, maxPeerCount int32, blockToLive uint64) (*pb.CollectionConfig, error) {
+	p, err := policydsl.FromString(policy)
 	if err != nil {
 		return nil, err
 	}
-	cpc := &cb.CollectionPolicyConfig{
-		Payload: &cb.CollectionPolicyConfig_SignaturePolicy{
+	cpc := &pb.CollectionPolicyConfig{
+		Payload: &pb.CollectionPolicyConfig_SignaturePolicy{
 			SignaturePolicy: p,
 		},
 	}
-	return &cb.CollectionConfig{
-		Payload: &cb.CollectionConfig_StaticCollectionConfig{
-			StaticCollectionConfig: &cb.StaticCollectionConfig{
+	return &pb.CollectionConfig{
+		Payload: &pb.CollectionConfig_StaticCollectionConfig{
+			StaticCollectionConfig: &pb.StaticCollectionConfig{
 				Name:              colName,
 				MemberOrgsPolicy:  cpc,
 				RequiredPeerCount: reqPeerCount,

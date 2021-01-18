@@ -14,7 +14,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/off-grid-block/fabric-protos-go/common"
 )
 

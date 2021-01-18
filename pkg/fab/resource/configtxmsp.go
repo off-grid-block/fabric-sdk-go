@@ -12,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 
 	"github.com/off-grid-block/fabric-protos-go/msp"
 	mspcfg "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/msp"

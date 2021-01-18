@@ -32,6 +32,7 @@ const (
 	configMSPOnly                = "config_test_msp_only.yaml"
 	configPemTestFile            = "config_test_pem.yaml"
 	configTestEntityMatchersFile = "config_test_entity_matchers.yaml"
+	configTestNoServerCerts      = "config_test_no_server_certs.yaml"
 	configType                   = "yaml"
 )
 
@@ -43,25 +44,10 @@ func TestCAConfigFailsByNetworkConfig(t *testing.T) {
 
 	//Tamper 'client.network' value and use a new config to avoid conflicting with other tests
 	configPath := filepath.Join(getConfigPath(), configTestFile)
-	configBackends, err := config.FromFile(configPath)()
+	customBackend, err := mocks.BackendFromFile(configPath)
 	if err != nil {
 		t.Fatalf("Unexpected error reading config: %s", err)
 	}
-	if len(configBackends) != 1 {
-		t.Fatalf("expected 1 backend but got %d", len(configBackends))
-	}
-	configBackend := configBackends[0]
-
-	backendMap := make(map[string]interface{})
-	backendMap["client"], _ = configBackend.Lookup("client")
-	backendMap["certificateAuthorities"], _ = configBackend.Lookup("certificateAuthorities")
-	backendMap["entityMatchers"], _ = configBackend.Lookup("entityMatchers")
-	backendMap["peers"], _ = configBackend.Lookup("peers")
-	backendMap["organizations"], _ = configBackend.Lookup("organizations")
-	backendMap["orderers"], _ = configBackend.Lookup("orderers")
-	backendMap["channels"], _ = configBackend.Lookup("channels")
-
-	customBackend := &mocks.MockConfigBackend{KeyValueMap: backendMap}
 
 	identityCfg, err := ConfigFromBackend(customBackend)
 	if err != nil {
@@ -88,6 +74,62 @@ func TestCAConfigFailsByNetworkConfig(t *testing.T) {
 
 	//Testing CAConfig failure scenario
 	testCAConfigFailureScenario(sampleIdentityConfig, t)
+
+}
+
+func TestCACACertConfig(t *testing.T) {
+
+	configPath := filepath.Join(getConfigPath(), configTestFile)
+	mockBackend, err := mocks.BackendFromFile(configPath)
+	if err != nil {
+		t.Fatalf("Unexpected error reading config: %s", err)
+	}
+
+	// SystemCertPool is disabled
+	ok := mockBackend.Set("client.tlscerts.systemcertpool", false)
+	if !ok {
+		t.Fatal("Failed to set client.tlscerts.systemcertpool")
+	}
+
+	// CAs don't have defined CACert
+	casi, ok := mockBackend.Get("certificateAuthorities")
+	if !ok {
+		t.Fatal("Failed to get certificateAuthorities")
+	}
+	cas, ok := casi.(map[string]interface{})
+	if !ok {
+		t.Fatal("Wrong type")
+	}
+	for _, cai := range cas {
+		ca, ok := cai.(map[string]interface{})
+		if !ok {
+			t.Fatal("Wrong type")
+		}
+		b := mocks.MockConfigBackend{KeyValueMap: ca}
+		// remove CA cert path
+		if !b.Set("tlscacerts.path", "") {
+			t.Fatal("Failed to set tlscacerts.path")
+		}
+	}
+
+	_, err = ConfigFromBackend(mockBackend)
+	if err == nil {
+		t.Fatal("Expected error for bad config")
+	}
+	if !strings.Contains(err.Error(), "doesn't have defined tlsCACerts") {
+		t.Fatal("Wrong error for bad config")
+	}
+
+	// enable SystemCertPool, it should be sufficient for good configuration
+	ok = mockBackend.Set("client.tlscerts.systemcertpool", true)
+	if !ok {
+		t.Fatal("Failed to set client.tlscerts.systemcertpool")
+	}
+
+	_, err = ConfigFromBackend(mockBackend)
+	if err != nil {
+		t.Fatal("Expected no error for when only SystemCertPool is present")
+	}
 
 }
 
@@ -516,4 +558,34 @@ func TestEntityMatchers(t *testing.T) {
 	configImpl := identityConfig.(*IdentityConfig)
 	assert.Equal(t, 3, len(configImpl.caMatchers), "preloading matchers isn't working as expected")
 
+}
+
+func TestCAConfigNoServerCerts(t *testing.T) {
+	//Test config
+	configPath := filepath.Join(getConfigPath(), configTestNoServerCerts)
+	backend, err := config.FromFile(configPath)()
+	if err != nil {
+		t.Fatal("Failed to get config backend")
+	}
+
+	config, err := ConfigFromBackend(backend...)
+	if err != nil {
+		t.Fatal("Failed to get identity config")
+	}
+	identityConfig := config.(*IdentityConfig)
+
+	//Testing CA Client File Location
+	certfile, ok := identityConfig.CAClientCert(org1CA)
+	assert.True(t, ok, "CA Cert file location read failed ")
+	assert.NotEmpty(t, certfile)
+
+	//Testing CA Key File Location
+	keyFile, ok := identityConfig.CAClientKey(org1CA)
+	assert.True(t, ok, "CA Key file location read failed ")
+	assert.NotEmpty(t, keyFile)
+
+	//Testing CA Server Cert Files
+	sCertFiles, ok := identityConfig.CAServerCerts(org1CA)
+	assert.True(t, ok, "Getting CA server cert files failed")
+	assert.Empty(t, sCertFiles)
 }

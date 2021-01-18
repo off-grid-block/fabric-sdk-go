@@ -8,9 +8,10 @@ package txn
 
 import (
 	reqContext "context"
+	"sync"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
-	"sync"
 
 	"github.com/off-grid-block/fabric-protos-go/common"
 	pb "github.com/off-grid-block/fabric-protos-go/peer"
@@ -22,7 +23,7 @@ import (
 )
 
 // CreateChaincodeInvokeProposal creates a proposal for transaction.
-func CreateChaincodeInvokeProposal(txh fab.TransactionHeader, request fab.ChaincodeInvokeRequest, indyflag bool) (*fab.TransactionProposal, error) {
+func CreateChaincodeInvokeProposal(txh fab.TransactionHeader, request fab.ChaincodeInvokeRequest) (*fab.TransactionProposal, error) {
 	if request.ChaincodeID == "" {
 		return nil, errors.New("ChaincodeID is required")
 	}
@@ -40,23 +41,24 @@ func CreateChaincodeInvokeProposal(txh fab.TransactionHeader, request fab.Chainc
 
 	// create invocation spec to target a chaincode with arguments
 	ccis := &pb.ChaincodeInvocationSpec{ChaincodeSpec: &pb.ChaincodeSpec{
-		Type: pb.ChaincodeSpec_GOLANG, ChaincodeId: &pb.ChaincodeID{Name: request.ChaincodeID},
-		Input: &pb.ChaincodeInput{Args: argsArray}}}
+		Type: request.Lang, ChaincodeId: &pb.ChaincodeID{Name: request.ChaincodeID},
+		Input: &pb.ChaincodeInput{Args: argsArray, IsInit: request.IsInit}}}
 
-	proposal, txid, err := protoutil.CreateChaincodeProposalWithTxIDNonceAndTransient(string(txh.TransactionID()), common.HeaderType_ENDORSER_TRANSACTION, txh.ChannelID(), ccis, txh.Nonce(), txh.Creator(), request.TransientMap, indyflag, txh.Did())
+	proposal, _, err := protoutil.CreateChaincodeProposalWithTxIDNonceAndTransient(string(txh.TransactionID()), common.HeaderType_ENDORSER_TRANSACTION, txh.ChannelID(), ccis, txh.Nonce(), txh.Creator(), request.TransientMap)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create chaincode proposal")
 	}
 
 	tp := fab.TransactionProposal{
-		TxnID:    fab.TransactionID(txid), //TxnID:    txh.TransactionID(),
+		TxnID:    txh.TransactionID(),
 		Proposal: proposal,
 	}
+
 	return &tp, nil
 }
 
 // signProposal creates a SignedProposal based on the current context.
-func signProposal(ctx contextApi.Client, proposal *pb.Proposal, indyFlag bool, did string) (*pb.SignedProposal, error) {
+func signProposal(ctx contextApi.Client, proposal *pb.Proposal) (*pb.SignedProposal, error) {
 	proposalBytes, err := proto.Marshal(proposal)
 	if err != nil {
 		return nil, errors.Wrap(err, "mashal proposal failed")
@@ -66,8 +68,8 @@ func signProposal(ctx contextApi.Client, proposal *pb.Proposal, indyFlag bool, d
 	if signingMgr == nil {
 		return nil, errors.New("signing manager is nil")
 	}
-    // Creating signature using aca-py agent
-	signature, err := signingMgr.Sign(proposalBytes, ctx.PrivateKey(), indyFlag, did)
+
+	signature, err := signingMgr.Sign(proposalBytes, ctx.PrivateKey())
 	if err != nil {
 		return nil, errors.WithMessage(err, "sign failed")
 	}
@@ -76,11 +78,12 @@ func signProposal(ctx contextApi.Client, proposal *pb.Proposal, indyFlag bool, d
 }
 
 // SendProposal sends a TransactionProposal to ProposalProcessor.
-func SendProposal(reqCtx reqContext.Context, proposal *fab.TransactionProposal, targets []fab.ProposalProcessor, indyFlag bool, did string) ([]*fab.TransactionProposalResponse, error) {
+func SendProposal(reqCtx reqContext.Context, proposal *fab.TransactionProposal, targets []fab.ProposalProcessor) ([]*fab.TransactionProposalResponse, error) {
 
 	if proposal == nil {
 		return nil, errors.New("proposal is required")
 	}
+
 	if len(targets) < 1 {
 		return nil, errors.New("targets is required")
 	}
@@ -97,7 +100,7 @@ func SendProposal(reqCtx reqContext.Context, proposal *fab.TransactionProposal, 
 	if !ok {
 		return nil, errors.New("failed get client context from reqContext for signProposal")
 	}
-	signedProposal, err := signProposal(ctx, proposal.Proposal, indyFlag, did)
+	signedProposal, err := signProposal(ctx, proposal.Proposal)
 	if err != nil {
 		return nil, errors.WithMessage(err, "sign proposal failed")
 	}
@@ -108,10 +111,9 @@ func SendProposal(reqCtx reqContext.Context, proposal *fab.TransactionProposal, 
 	var transactionProposalResponses []*fab.TransactionProposalResponse
 	var wg sync.WaitGroup
 	errs := multi.Errors{}
-	count := 0
+
 	for _, p := range targets {
 		wg.Add(1)
-		count = count + 1
 		go func(processor fab.ProposalProcessor) {
 			defer wg.Done()
 
@@ -132,6 +134,7 @@ func SendProposal(reqCtx reqContext.Context, proposal *fab.TransactionProposal, 
 		}(p)
 	}
 	wg.Wait()
+
 	return transactionProposalResponses, errs.ToError()
 }
 

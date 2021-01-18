@@ -23,8 +23,8 @@ package lib
 import (
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
 
-	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/api"
 	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/tls"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkinternal/pkg/api"
 )
 
 // ClientConfig is the fabric-ca client's config

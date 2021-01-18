@@ -29,7 +29,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/off-grid-block/fabric-protos-go/common"
 	pb "github.com/off-grid-block/fabric-protos-go/peer"
-	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/cauthdsl"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/policydsl"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
@@ -815,7 +815,7 @@ func TestInstantiateCCWithDifferentMSP(t *testing.T) {
 	rc := setupResMgmtClient(t, ctx)
 
 	// Valid request
-	ccPolicy := cauthdsl.SignedByMspMember("otherMSP")
+	ccPolicy := policydsl.SignedByMspMember("otherMSP")
 	req := InstantiateCCRequest{Name: "name", Version: "version", Path: "path", Policy: ccPolicy}
 
 	// Test filter only provided (filter rejects discovery service peer msp)
@@ -836,7 +836,7 @@ func TestInstantiateCCWithOpts(t *testing.T) {
 	rc := setupDefaultResMgmtClient(t)
 
 	// Valid request
-	ccPolicy := cauthdsl.SignedByMspMember("Org1MSP")
+	ccPolicy := policydsl.SignedByMspMember("Org1MSP")
 	req := InstantiateCCRequest{Name: "name", Version: "version", Path: "path", Policy: ccPolicy}
 
 	// Setup targets
@@ -908,7 +908,7 @@ func TestUpgradeCCWithDifferentMSP(t *testing.T) {
 	rc := setupResMgmtClient(t, ctx)
 
 	// Valid request
-	ccPolicy := cauthdsl.SignedByMspMember("otherMSP")
+	ccPolicy := policydsl.SignedByMspMember("otherMSP")
 	req := UpgradeCCRequest{Name: "name", Version: "version", Path: "path", Policy: ccPolicy}
 
 	// Test filter only provided (filter rejects discovery service peer msp)
@@ -929,7 +929,7 @@ func TestUpgradeCCWithOpts(t *testing.T) {
 	rc := setupDefaultResMgmtClient(t)
 
 	// Valid request
-	ccPolicy := cauthdsl.SignedByMspMember("Org1MSP")
+	ccPolicy := policydsl.SignedByMspMember("Org1MSP")
 	req := UpgradeCCRequest{Name: "name", Version: "version", Path: "path", Policy: ccPolicy}
 
 	// Setup targets
@@ -966,7 +966,7 @@ func TestCCProposal(t *testing.T) {
 
 	rc := setupResMgmtClient(t, ctx)
 
-	ccPolicy := cauthdsl.SignedByMspMember("Org1MSP")
+	ccPolicy := policydsl.SignedByMspMember("Org1MSP")
 	instantiateReq := InstantiateCCRequest{Name: "name", Version: "version", Path: "path", Policy: ccPolicy}
 
 	// Test invalid function (only 'instatiate' and 'upgrade' are supported)
@@ -1610,6 +1610,39 @@ func TestGetConfigSignaturesFromIdentities(t *testing.T) {
 	assert.NoError(t, err, "CreateSignaturesFromCfgPath failed")
 	//t.Logf("Signature: %s", signature)
 	assert.NotNil(t, signature, "signatures must not be empty")
+}
+
+func TestCheckRequiredCCProposalParams(t *testing.T) {
+	// Valid request
+	ccPolicy := policydsl.SignedByMspMember("Org1MSP")
+	req := InstantiateCCRequest{Name: "name", Version: "version", Path: "path", Policy: ccPolicy}
+
+	// Test empty channel lang
+	checkRequiredCCProposalParams("mychannel", &req)
+	if req.Lang != pb.ChaincodeSpec_GOLANG {
+		t.Fatal("Lang must be equal to golang", req.Lang)
+	}
+
+	// Test channel lang with golang
+	req = InstantiateCCRequest{Name: "name", Version: "version", Lang: pb.ChaincodeSpec_GOLANG, Path: "path", Policy: ccPolicy}
+	checkRequiredCCProposalParams("mychannel", &req)
+	if req.Lang != pb.ChaincodeSpec_GOLANG {
+		t.Fatal("Lang must be equal to golang")
+	}
+
+	// Test channel lang with java
+	req = InstantiateCCRequest{Name: "name", Version: "version", Lang: pb.ChaincodeSpec_JAVA, Path: "path", Policy: ccPolicy}
+	checkRequiredCCProposalParams("mychannel", &req)
+	if req.Lang != pb.ChaincodeSpec_JAVA {
+		t.Fatal("Lang must be equal to java")
+	}
+
+	// Test channel lang with unknown
+	req = InstantiateCCRequest{Name: "name", Version: "version", Lang: 11, Path: "path", Policy: ccPolicy}
+	checkRequiredCCProposalParams("mychannel", &req)
+	if req.Lang != pb.ChaincodeSpec_GOLANG {
+		t.Fatal("Lang must be equal to golang", req.Lang)
+	}
 }
 
 func createClientContext(fabCtx context.Client) context.ClientProvider {

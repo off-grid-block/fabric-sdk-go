@@ -22,9 +22,6 @@ import (
 	"github.com/off-grid-block/fabric-protos-go/orderer/etcdraft"
 	pb "github.com/off-grid-block/fabric-protos-go/peer"
 	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
-	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/protoutil"
-	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -227,7 +224,7 @@ func ChannelCreationPolicyValue(policy *cb.Policy) *StandardConfigValue {
 	}
 }
 
-// ACLsValues returns the config definition for an applications resources based ACL definitions.
+// ACLValues returns the config definition for an applications resources based ACL definitions.
 // It is a value for the /Channel/Application/.
 func ACLValues(acls map[string]string) *StandardConfigValue {
 	a := &pb.ACLs{
@@ -242,55 +239,6 @@ func ACLValues(acls map[string]string) *StandardConfigValue {
 		key:   ACLsKey,
 		value: a,
 	}
-}
-
-// ValidateCapabilities validates whether the peer can meet the capabilities requirement in the given config block
-func ValidateCapabilities(block *cb.Block, bccsp core.CryptoSuite) error {
-	envelopeConfig, err := protoutil.ExtractEnvelope(block, 0)
-	if err != nil {
-		return errors.Errorf("failed to %s", err)
-	}
-
-	configEnv := &cb.ConfigEnvelope{}
-	_, err = protoutil.UnmarshalEnvelopeOfType(envelopeConfig, cb.HeaderType_CONFIG, configEnv)
-	if err != nil {
-		return errors.Errorf("malformed configuration envelope: %s", err)
-	}
-
-	if configEnv.Config == nil {
-		return errors.New("nil config envelope Config")
-	}
-
-	if configEnv.Config.ChannelGroup == nil {
-		return errors.New("no channel configuration was found in the config block")
-	}
-
-	if configEnv.Config.ChannelGroup.Groups == nil {
-		return errors.New("no channel configuration groups are available")
-	}
-
-	_, exists := configEnv.Config.ChannelGroup.Groups[ApplicationGroupKey]
-	if !exists {
-		return errors.Errorf("invalid configuration block, missing %s "+
-			"configuration group", ApplicationGroupKey)
-	}
-
-	cc, err := NewChannelConfig(configEnv.Config.ChannelGroup, bccsp)
-	if err != nil {
-		return errors.Errorf("no valid channel configuration found due to %s", err)
-	}
-
-	// Check the channel top-level capabilities
-	if err := cc.Capabilities().Supported(); err != nil {
-		return err
-	}
-
-	// Check the application capabilities
-	if err := cc.ApplicationConfig().Capabilities().Supported(); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // MarshalEtcdRaftMetadata serializes etcd RAFT metadata.

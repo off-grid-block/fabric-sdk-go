@@ -17,6 +17,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/selection/fabricselection"
 	selectionopts "github.com/off-grid-block/fabric-sdk-go/pkg/client/common/selection/options"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/options"
@@ -26,8 +27,8 @@ import (
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk/provider/chpvdr"
 	"github.com/off-grid-block/fabric-sdk-go/test/integration"
-	"github.com/off-grid-block/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
-	cb "github.com/off-grid-block/fabric-protos-go/common"
+	"github.com/off-grid-block/fabric-sdk-go/test/metadata"
+	"github.com/off-grid-block/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/policydsl"
 	grpcCodes "google.golang.org/grpc/codes"
 )
 
@@ -91,10 +92,15 @@ func TestFabricSelection(t *testing.T) {
 
 	t.Run("Policy: Org1 Only", func(t *testing.T) {
 		ccID := integration.GenerateExampleID(true)
-		err = integration.InstallExampleChaincode(orgsContext, ccID)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org1MSP.member')")
-		require.NoError(t, err)
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org1MSP.member')")
+			require.NoError(t, err)
+		} else {
+			err = integration.InstantiateExampleChaincodeLc(sdk, orgsContext, orgChannelID, ccID, "OR('Org1MSP.member')")
+			require.NoError(t, err)
+		}
 
 		testEndorsers(
 			t, selectionService,
@@ -107,10 +113,15 @@ func TestFabricSelection(t *testing.T) {
 
 	t.Run("Policy: Org2 Only", func(t *testing.T) {
 		ccID := integration.GenerateExampleID(true)
-		err = integration.InstallExampleChaincode(orgsContext, ccID)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org2MSP.member')")
-		require.NoError(t, err)
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org2MSP.member')")
+			require.NoError(t, err)
+		} else {
+			err = integration.InstantiateExampleChaincodeLc(sdk, orgsContext, orgChannelID, ccID, "OR('Org2MSP.member')")
+			require.NoError(t, err)
+		}
 
 		testEndorsers(
 			t, selectionService,
@@ -123,10 +134,15 @@ func TestFabricSelection(t *testing.T) {
 
 	t.Run("Policy: Org1 or Org2", func(t *testing.T) {
 		ccID := integration.GenerateExampleID(true)
-		err = integration.InstallExampleChaincode(orgsContext, ccID)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org1MSP.member','Org2MSP.member')")
-		require.NoError(t, err)
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org1MSP.member','Org2MSP.member')")
+			require.NoError(t, err)
+		} else {
+			err = integration.InstantiateExampleChaincodeLc(sdk, orgsContext, orgChannelID, ccID, "OR('Org1MSP.member','Org2MSP.member')")
+			require.NoError(t, err)
+		}
 
 		testEndorsers(
 			t, selectionService,
@@ -141,10 +157,15 @@ func TestFabricSelection(t *testing.T) {
 
 	t.Run("Policy: Org1 and Org2", func(t *testing.T) {
 		ccID := integration.GenerateExampleID(true)
-		err = integration.InstallExampleChaincode(orgsContext, ccID)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "AND('Org1MSP.member','Org2MSP.member')")
-		require.NoError(t, err)
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "AND('Org1MSP.member','Org2MSP.member')")
+			require.NoError(t, err)
+		} else {
+			err = integration.InstantiateExampleChaincodeLc(sdk, orgsContext, orgChannelID, ccID, "AND('Org1MSP.member','Org2MSP.member')")
+			require.NoError(t, err)
+		}
 
 		testEndorsers(
 			t, selectionService,
@@ -172,16 +193,26 @@ func TestFabricSelection(t *testing.T) {
 	// Chaincode to Chaincode
 	t.Run("Policy: CC1(Org1 Only) to CC2(Org2 Only)", func(t *testing.T) {
 		ccID1 := integration.GenerateExampleID(true)
-		err = integration.InstallExampleChaincode(orgsContext, ccID1)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID1, "OR('Org1MSP.member')")
-		require.NoError(t, err)
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID1)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID1, "OR('Org1MSP.member')")
+			require.NoError(t, err)
+		} else {
+			err = integration.InstantiateExampleChaincodeLc(sdk, orgsContext, orgChannelID, ccID1, "OR('Org1MSP.member')")
+			require.NoError(t, err)
+		}
 
 		ccID2 := integration.GenerateExampleID(true)
-		err = integration.InstallExampleChaincode(orgsContext, ccID2)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID2, "OR('Org2MSP.member')")
-		require.NoError(t, err)
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID2)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID2, "OR('Org2MSP.member')")
+			require.NoError(t, err)
+		} else {
+			err = integration.InstantiateExampleChaincodeLc(sdk, orgsContext, orgChannelID, ccID2, "OR('Org2MSP.member')")
+			require.NoError(t, err)
+		}
 
 		testEndorsers(
 			t, selectionService,
@@ -200,10 +231,15 @@ func TestFabricSelection(t *testing.T) {
 		collConfig, err := newCollectionConfig(coll1, "OR('Org1MSP.member')", 0, 2, 1000)
 		require.NoError(t, err)
 
-		err = integration.InstallExampleChaincode(orgsContext, ccID)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org1MSP.member','Org2MSP.member')", collConfig)
-		require.NoError(t, err)
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org1MSP.member','Org2MSP.member')", collConfig)
+			require.NoError(t, err)
+		} else {
+			err = integration.InstantiatePvtExampleChaincodeLc(sdk, orgsContext, orgChannelID, ccID, "OR('Org1MSP.member','Org2MSP.member')", collConfig)
+			require.NoError(t, err)
+		}
 
 		testEndorsers(
 			t, selectionService,
@@ -345,19 +381,19 @@ func expecting(groups ...[]string) [][]string {
 	return groups
 }
 
-func newCollectionConfig(colName, policy string, reqPeerCount, maxPeerCount int32, blockToLive uint64) (*cb.CollectionConfig, error) {
-	p, err := cauthdsl.FromString(policy)
+func newCollectionConfig(colName, policy string, reqPeerCount, maxPeerCount int32, blockToLive uint64) (*pb.CollectionConfig, error) {
+	p, err := policydsl.FromString(policy)
 	if err != nil {
 		return nil, err
 	}
-	cpc := &cb.CollectionPolicyConfig{
-		Payload: &cb.CollectionPolicyConfig_SignaturePolicy{
+	cpc := &pb.CollectionPolicyConfig{
+		Payload: &pb.CollectionPolicyConfig_SignaturePolicy{
 			SignaturePolicy: p,
 		},
 	}
-	return &cb.CollectionConfig{
-		Payload: &cb.CollectionConfig_StaticCollectionConfig{
-			StaticCollectionConfig: &cb.StaticCollectionConfig{
+	return &pb.CollectionConfig{
+		Payload: &pb.CollectionConfig_StaticCollectionConfig{
+			StaticCollectionConfig: &pb.StaticCollectionConfig{
 				Name:              colName,
 				MemberOrgsPolicy:  cpc,
 				RequiredPeerCount: reqPeerCount,

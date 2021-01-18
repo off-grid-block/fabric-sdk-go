@@ -27,27 +27,26 @@ import (
 	"os"
 	"time"
 
-	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkinternal/configtxlator/update"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/off-grid-block/fabric-protos-go/common"
-	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/verifier"
-	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/retry"
-	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
-	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/channel"
-	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/chconfig"
-
 	pb "github.com/off-grid-block/fabric-protos-go/peer"
+	"github.com/pkg/errors"
+
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkinternal/configtxlator/update"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/verifier"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/multi"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/logging"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
 	contextImpl "github.com/off-grid-block/fabric-sdk-go/pkg/context"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/channel"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/chconfig"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/peer"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/resource"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/txn"
-	"github.com/pkg/errors"
 )
 
 const bufferSize = 1024
@@ -72,9 +71,10 @@ type InstantiateCCRequest struct {
 	Name       string
 	Path       string
 	Version    string
+	Lang       pb.ChaincodeSpec_Type
 	Args       [][]byte
 	Policy     *common.SignaturePolicyEnvelope
-	CollConfig []*common.CollectionConfig
+	CollConfig []*pb.CollectionConfig
 }
 
 // InstantiateCCResponse contains response parameters for instantiate chaincode
@@ -87,9 +87,10 @@ type UpgradeCCRequest struct {
 	Name       string
 	Path       string
 	Version    string
+	Lang       pb.ChaincodeSpec_Type
 	Args       [][]byte
 	Policy     *common.SignaturePolicyEnvelope
-	CollConfig []*common.CollectionConfig
+	CollConfig []*pb.CollectionConfig
 }
 
 // UpgradeCCResponse contains response parameters for upgrade chaincode
@@ -131,9 +132,10 @@ var logger = logging.NewLogger("fabsdk/client")
 
 // Client enables managing resources in Fabric network.
 type Client struct {
-	ctx              context.Client
-	filter           fab.TargetFilter
-	localCtxProvider context.LocalProvider
+	ctx                context.Client
+	filter             fab.TargetFilter
+	localCtxProvider   context.LocalProvider
+	lifecycleProcessor *lifecycleProcessor
 }
 
 // mspFilter filters peers by MSP ID
@@ -159,7 +161,6 @@ func WithDefaultTargetFilter(filter fab.TargetFilter) ClientOption {
 
 // New returns a resource management client instance.
 func New(ctxProvider context.ClientProvider, opts ...ClientOption) (*Client, error) {
-
 	ctx, err := ctxProvider()
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to create resmgmt client due to context error")
@@ -189,6 +190,8 @@ func New(ctxProvider context.ClientProvider, opts ...ClientOption) (*Client, err
 			)
 		}
 	}
+
+	resourceClient.lifecycleProcessor = newLifecycleProcessor(ctx, resourceClient.getCCProposalTargets, resourceClient.verifyTPSignature, resourceClient.sendTransactionAndCheckEvent)
 
 	return resourceClient, nil
 }
@@ -618,7 +621,7 @@ func (rc *Client) QueryInstantiatedChaincodes(channelID string, options ...Reque
 //
 // Returns:
 // list of collections config
-func (rc *Client) QueryCollectionsConfig(channelID string, chaincodeName string, options ...RequestOption) (*common.CollectionConfigPackage, error) {
+func (rc *Client) QueryCollectionsConfig(channelID string, chaincodeName string, options ...RequestOption) (*pb.CollectionConfigPackage, error) {
 	opts, err := rc.prepareRequestOpts(options...)
 	if err != nil {
 		return nil, err
@@ -791,7 +794,7 @@ func (rc *Client) verifyTPSignature(channelService fab.ChannelService, txProposa
 
 // sendCCProposal sends proposal for type  Instantiate, Upgrade
 func (rc *Client) sendCCProposal(reqCtx reqContext.Context, ccProposalType chaincodeProposalType, channelID string, req InstantiateCCRequest, opts requestOptions) (fab.TransactionID, error) {
-	if err := checkRequiredCCProposalParams(channelID, req); err != nil {
+	if err := checkRequiredCCProposalParams(channelID, &req); err != nil {
 		return fab.EmptyTransactionID, err
 	}
 
@@ -866,7 +869,7 @@ func (rc *Client) sendTransactionAndCheckEvent(eventService fab.EventService, tp
 	}
 }
 
-func checkRequiredCCProposalParams(channelID string, req InstantiateCCRequest) error {
+func checkRequiredCCProposalParams(channelID string, req *InstantiateCCRequest) error {
 
 	if channelID == "" {
 		return errors.New("must provide channel ID")
@@ -875,6 +878,12 @@ func checkRequiredCCProposalParams(channelID string, req InstantiateCCRequest) e
 	if req.Name == "" || req.Version == "" || req.Path == "" || req.Policy == nil {
 		return errors.New("Chaincode name, version, path and policy are required")
 	}
+
+	// Forward compatibility, set Lang to golang by default
+	if req.Lang == 0 || pb.ChaincodeSpec_Type_name[int32(req.Lang)] == "" {
+		req.Lang = pb.ChaincodeSpec_GOLANG
+	}
+
 	return nil
 }
 
@@ -955,7 +964,7 @@ func (rc *Client) SaveChannel(req SaveChannelRequest, options ...RequestOption) 
 		orderer,
 	)
 	if err != nil {
-		return SaveChannelResponse{}, errors.WithMessage(err, "create channel failed2")
+		return SaveChannelResponse{}, errors.WithMessage(err, "create channel failed")
 	}
 
 	return SaveChannelResponse{TransactionID: txID}, nil
@@ -985,7 +994,7 @@ func (rc *Client) signAndSubmitChannelConfigTx(channelID string, signingIdentiti
 
 	txID, err := resource.CreateChannel(reqCtx, request, resource.WithRetry(opts.Retry))
 	if err != nil {
-		return "", errors.WithMessage(err, "create channel failed1")
+		return "", errors.WithMessage(err, "create channel failed")
 	}
 	return txID, nil
 }

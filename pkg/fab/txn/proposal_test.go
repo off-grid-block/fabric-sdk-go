@@ -19,13 +19,13 @@ import (
 
 	"time"
 
-	pb "github.com/off-grid-block/fabric-protos-go/peer"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/errors/multi"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
 	mock_context "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/test/mockfab"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/context"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/mocks"
 	mspmocks "github.com/off-grid-block/fabric-sdk-go/pkg/msp/test/mockmsp"
+	pb "github.com/off-grid-block/fabric-protos-go/peer"
 )
 
 const (
@@ -69,7 +69,7 @@ func TestNewTransactionProposal(t *testing.T) {
 		t.Fatalf("create transaction ID failed: %s", err)
 	}
 
-	tp, err := CreateChaincodeInvokeProposal(txh, request, false)
+	tp, err := CreateChaincodeInvokeProposal(txh, request)
 	if err != nil {
 		t.Fatalf("Create Transaction Proposal Failed: %s", err)
 	}
@@ -105,7 +105,7 @@ func TestSendTransactionProposal(t *testing.T) {
 		t.Fatalf("create transaction ID failed: %s", err)
 	}
 
-	tp, err := CreateChaincodeInvokeProposal(txh, request, false)
+	tp, err := CreateChaincodeInvokeProposal(txh, request)
 	if err != nil {
 		t.Fatalf("new transaction proposal failed: %s", err)
 	}
@@ -144,7 +144,7 @@ func TestNewTransactionProposalParams(t *testing.T) {
 		t.Fatalf("create transaction ID failed: %s", err)
 	}
 
-	tp, err := CreateChaincodeInvokeProposal(txh, request, false)
+	tp, err := CreateChaincodeInvokeProposal(txh, request)
 	if err != nil {
 		t.Fatalf("new transaction proposal failed: %s", err)
 	}
@@ -161,7 +161,7 @@ func TestNewTransactionProposalParams(t *testing.T) {
 		Fcn: "Hello",
 	}
 
-	_, err = CreateChaincodeInvokeProposal(txh, request, false)
+	_, err = CreateChaincodeInvokeProposal(txh, request)
 	if err == nil {
 		t.Fatal("Expected error")
 	}
@@ -170,7 +170,7 @@ func TestNewTransactionProposalParams(t *testing.T) {
 		ChaincodeID: "cc",
 	}
 
-	_, err = CreateChaincodeInvokeProposal(txh, request, false)
+	_, err = CreateChaincodeInvokeProposal(txh, request)
 	if err == nil {
 		t.Fatal("Expected error")
 	}
@@ -179,7 +179,7 @@ func TestNewTransactionProposalParams(t *testing.T) {
 		ChaincodeID: "cc",
 		Fcn:         "Hello",
 	}
-	_, err = CreateChaincodeInvokeProposal(txh, request, false)
+	_, err = CreateChaincodeInvokeProposal(txh, request)
 	if err != nil {
 		t.Fatalf("new transaction proposal failed: %s", err)
 	}

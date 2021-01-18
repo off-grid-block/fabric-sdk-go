@@ -17,7 +17,7 @@ import (
 	"encoding/pem"
 	"net/http"
 
-	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/util"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkinternal/pkg/util"
 	"github.com/pkg/errors"
 )
 

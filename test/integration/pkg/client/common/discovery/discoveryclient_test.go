@@ -22,14 +22,15 @@ import (
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/comm"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/discovery"
 	"github.com/off-grid-block/fabric-sdk-go/test/integration"
+	"github.com/off-grid-block/fabric-sdk-go/test/metadata"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	fabdiscovery "github.com/off-grid-block/fabric-protos-go/discovery"
 	discclient "github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/discovery/client"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/context"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk"
-	fabdiscovery "github.com/off-grid-block/fabric-protos-go/discovery"
 )
 
 const (
@@ -49,8 +50,7 @@ func TestDiscoveryClientPeers(t *testing.T) {
 	ctx, err := orgsContext[0].CtxProvider()
 	require.NoError(t, err, "error getting channel context")
 
-	var client *discovery.Client
-	client, err = discovery.New(ctx)
+	client, err := discovery.New(ctx)
 	require.NoError(t, err, "error creating discovery client")
 
 	reqCtx, cancel := context.NewRequest(ctx, context.WithTimeout(10*time.Second))
@@ -61,8 +61,14 @@ func TestDiscoveryClientPeers(t *testing.T) {
 	peerCfg1, err := comm.NetworkPeerConfig(ctx.EndpointConfig(), peer0Org1)
 	require.NoErrorf(t, err, "error getting peer config for [%s]", peer0Org1)
 
-	responses, err := client.Send(reqCtx, req, peerCfg1.PeerConfig)
+	responsesCh, err := client.Send(reqCtx, req, peerCfg1.PeerConfig)
 	require.NoError(t, err, "error calling discover service send")
+
+	var responses []discovery.Response
+
+	for resp := range responsesCh {
+		responses = append(responses, resp)
+	}
 	require.NotEmpty(t, responses, "expecting one response but got none")
 
 	resp := responses[0]
@@ -114,8 +120,7 @@ func TestDiscoveryClientLocalPeers(t *testing.T) {
 	ctx, err := ctxProvider()
 	require.NoError(t, err, "error getting channel context")
 
-	var client *discovery.Client
-	client, err = discovery.New(ctx)
+	client, err := discovery.New(ctx)
 	require.NoError(t, err, "error creating discovery client")
 
 	reqCtx, cancel := context.NewRequest(ctx, context.WithTimeout(10*time.Second))
@@ -126,8 +131,15 @@ func TestDiscoveryClientLocalPeers(t *testing.T) {
 	peerCfg1, err := comm.NetworkPeerConfig(ctx.EndpointConfig(), peer0Org1)
 	require.NoErrorf(t, err, "error getting peer config for [%s]", peer0Org1)
 
-	responses, err := client.Send(reqCtx, req, peerCfg1.PeerConfig)
+	responsesCh, err := client.Send(reqCtx, req, peerCfg1.PeerConfig)
 	require.NoError(t, err, "error calling discover service send")
+
+	var responses []discovery.Response
+
+	for resp := range responsesCh {
+		responses = append(responses, resp)
+	}
+
 	require.NotEmpty(t, responses, "No responses")
 
 	resp := responses[0]
@@ -160,10 +172,17 @@ func TestDiscoveryClientEndorsers(t *testing.T) {
 
 	t.Run("Policy: Org1 Only", func(t *testing.T) {
 		ccID := integration.GenerateExampleID(true)
-		err = integration.InstallExampleChaincode(orgsContext, ccID)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org1MSP.member')")
-		require.NoError(t, err)
+
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org1MSP.member')")
+			require.NoError(t, err)
+		} else {
+
+			err = integration.InstantiateExampleChaincodeLc(mainSDK, orgsContext, orgChannelID, ccID, "OR('Org1MSP.member')")
+			require.NoError(t, err)
+		}
 
 		testEndorsers(
 			t, mainSDK,
@@ -176,10 +195,16 @@ func TestDiscoveryClientEndorsers(t *testing.T) {
 
 	t.Run("Policy: Org2 Only", func(t *testing.T) {
 		ccID := integration.GenerateExampleID(true)
-		err = integration.InstallExampleChaincode(orgsContext, ccID)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org2MSP.member')")
-		require.NoError(t, err)
+
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org2MSP.member')")
+			require.NoError(t, err)
+		} else {
+			err = integration.InstantiateExampleChaincodeLc(mainSDK, orgsContext, orgChannelID, ccID, "OR('Org2MSP.member')")
+			require.NoError(t, err)
+		}
 
 		testEndorsers(
 			t, mainSDK,
@@ -192,10 +217,16 @@ func TestDiscoveryClientEndorsers(t *testing.T) {
 
 	t.Run("Policy: Org1 or Org2", func(t *testing.T) {
 		ccID := integration.GenerateExampleID(true)
-		err = integration.InstallExampleChaincode(orgsContext, ccID)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org1MSP.member','Org2MSP.member')")
-		require.NoError(t, err)
+
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "OR('Org1MSP.member','Org2MSP.member')")
+			require.NoError(t, err)
+		} else {
+			err = integration.InstantiateExampleChaincodeLc(mainSDK, orgsContext, orgChannelID, ccID, "OR('Org1MSP.member','Org2MSP.member')")
+			require.NoError(t, err)
+		}
 
 		require.NoError(t, err)
 		testEndorsers(
@@ -211,10 +242,15 @@ func TestDiscoveryClientEndorsers(t *testing.T) {
 
 	t.Run("Policy: Org1 and Org2", func(t *testing.T) {
 		ccID := integration.GenerateExampleID(true)
-		err = integration.InstallExampleChaincode(orgsContext, ccID)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "AND('Org1MSP.member','Org2MSP.member')")
-		require.NoError(t, err)
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID, "AND('Org1MSP.member','Org2MSP.member')")
+			require.NoError(t, err)
+		} else {
+			err = integration.InstantiateExampleChaincodeLc(mainSDK, orgsContext, orgChannelID, ccID, "AND('Org1MSP.member','Org2MSP.member')")
+			require.NoError(t, err)
+		}
 
 		testEndorsers(
 			t, mainSDK,
@@ -231,16 +267,26 @@ func TestDiscoveryClientEndorsers(t *testing.T) {
 	t.Run("Policy: CC1(Org1 Only) to CC2(Org2 Only)", func(t *testing.T) {
 
 		ccID1 := integration.GenerateExampleID(true)
-		err = integration.InstallExampleChaincode(orgsContext, ccID1)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID1, "OR('Org1MSP.member')")
-		require.NoError(t, err)
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID1)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID1, "OR('Org1MSP.member')")
+			require.NoError(t, err)
+		} else {
+			err = integration.InstantiateExampleChaincodeLc(mainSDK, orgsContext, orgChannelID, ccID1, "OR('Org1MSP.member')")
+			require.NoError(t, err)
+		}
 
 		ccID2 := integration.GenerateExampleID(true)
-		err = integration.InstallExampleChaincode(orgsContext, ccID2)
-		require.NoError(t, err)
-		err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID2, "OR('Org2MSP.member')")
-		require.NoError(t, err)
+		if metadata.CCMode == "lscc" {
+			err = integration.InstallExampleChaincode(orgsContext, ccID2)
+			require.NoError(t, err)
+			err = integration.InstantiateExampleChaincode(orgsContext, orgChannelID, ccID2, "OR('Org2MSP.member')")
+			require.NoError(t, err)
+		} else {
+			err = integration.InstantiateExampleChaincodeLc(mainSDK, orgsContext, orgChannelID, ccID2, "OR('Org2MSP.member')")
+			require.NoError(t, err)
+		}
 
 		testEndorsers(
 			t, mainSDK,
@@ -259,8 +305,7 @@ func testEndorsers(t *testing.T, sdk *fabsdk.FabricSDK, interest *fabdiscovery.C
 	ctx, err := ctxProvider()
 	require.NoError(t, err, "error getting channel context")
 
-	var client *discovery.Client
-	client, err = discovery.New(ctx)
+	client, err := discovery.New(ctx)
 	require.NoError(t, err, "error creating discovery client")
 
 	peerCfg1, err := comm.NetworkPeerConfig(ctx.EndpointConfig(), peer0Org1)
@@ -358,15 +403,22 @@ func setupOrgContext(t *testing.T) []*integration.OrgContext {
 	}
 }
 
-func sendEndorserQuery(t *testing.T, ctx contextAPI.Client, client *discovery.Client, interest *fabdiscovery.ChaincodeInterest, peerConfig fab.PeerConfig) (discclient.ChannelResponse, error) {
+func sendEndorserQuery(t *testing.T, ctx contextAPI.Client, client discovery.Client, interest *fabdiscovery.ChaincodeInterest, peerConfig fab.PeerConfig) (discclient.ChannelResponse, error) {
 	req, err := discovery.NewRequest().OfChannel(orgChannelID).AddEndorsersQuery(interest)
 	require.NoError(t, err, "error adding endorsers query")
 
 	reqCtx, cancel := context.NewRequest(ctx, context.WithTimeout(10*time.Second))
 	defer cancel()
 
-	responses, err := client.Send(reqCtx, req, peerConfig)
+	responsesCh, err := client.Send(reqCtx, req, peerConfig)
 	require.NoError(t, err, "error calling discover service send")
+
+	var responses []discovery.Response
+
+	for resp := range responsesCh {
+		responses = append(responses, resp)
+	}
+
 	require.NotEmpty(t, responses, "expecting one response but got none")
 
 	chanResp := responses[0].ForChannel(orgChannelID)

@@ -25,14 +25,15 @@ DOCKER_CMD         ?= docker
 DOCKER_COMPOSE_CMD ?= docker-compose
 
 # Fabric versions used in the Makefile
-FABRIC_STABLE_VERSION           := 1.4.2
-FABRIC_STABLE_VERSION_MINOR     := 1.4
-FABRIC_STABLE_VERSION_MAJOR     := 1
+FABRIC_STABLE_VERSION           := 2.2.0
+FABRIC_STABLE_VERSION_MINOR     := 2.2
+FABRIC_STABLE_VERSION_MAJOR     := 2
 
 FABRIC_PRERELEASE_VERSION       :=
 FABRIC_PRERELEASE_VERSION_MINOR :=
-FABRIC_PREV_VERSION             := 1.3.0
-FABRIC_PREV_VERSION_MINOR       := 1.3
+FABRIC_PREV_VERSION             := 1.4.7
+FABRIC_PREV_VERSION_MINOR       := 1.4
+FABRIC_PREV_VERSION_MAJOR       := 1
 FABRIC_DEVSTABLE_VERSION_MINOR  := 1.4
 FABRIC_DEVSTABLE_VERSION_MAJOR  := 1
 
@@ -48,7 +49,7 @@ FABRIC_SDKGO_TEST_CHANGED  ?= false
 FABRIC_SDKGO_TESTRUN_ID    ?= $(shell date +'%Y%m%d%H%M%S')
 
 # Dev tool versions (overridable)
-GOLANGCI_LINT_VER ?= v1.17.1
+GOLANGCI_LINT_VER ?= v1.23.8
 
 # Fabric tool versions (overridable)
 FABRIC_TOOLS_VERSION ?= $(FABRIC_STABLE_VERSION)
@@ -63,14 +64,13 @@ FABRIC_DEV_REGISTRY         ?= nexus3.hyperledger.org:10001
 FABRIC_DEV_REGISTRY_PRE_CMD ?= docker login -u docker -p docker nexus3.hyperledger.org:10001
 
 # Base image variables for socat and softshm builds
-BASE_UBUNTU_VERSION = "xenial"
-BASE_GO_VERSION = "1.12.5"
+BASE_GO_VERSION = "1.14"
 
 # Upstream fabric patching (overridable)
 THIRDPARTY_FABRIC_CA_BRANCH ?= master
-THIRDPARTY_FABRIC_CA_COMMIT ?= 233a4749c83b96a9dddfba97a358d55c974e586d
+THIRDPARTY_FABRIC_CA_COMMIT ?= 3a1323dafce1ecbe79444fc8701596e34f18d3e0
 THIRDPARTY_FABRIC_BRANCH    ?= master
-THIRDPARTY_FABRIC_COMMIT    ?= fedb583e7cb2998fef986a2a1a609f1f90beb983
+THIRDPARTY_FABRIC_COMMIT    ?= v2.2.0
 
 # Force removal of images in cleanup (overridable)
 FIXTURE_DOCKER_REMOVE_FORCE ?= false
@@ -101,11 +101,16 @@ FABRIC_PREV_CODELEVEL_VER       := v$(FABRIC_PREV_VERSION_MINOR)
 FABRIC_PRERELEASE_CODELEVEL_VER := v$(FABRIC_PRERELEASE_VERSION_MINOR)
 FABRIC_DEVSTABLE_CODELEVEL_VER  := v$(FABRIC_DEVSTABLE_VERSION_MINOR)
 FABRIC_CODELEVEL_VER            ?= $(FABRIC_STABLE_CODELEVEL_VER)
-FABRIC_CRYPTOCONFIG_VER         ?= v$(FABRIC_STABLE_VERSION_MAJOR)
+# TODO: Make SDK compatible with latest cryptogen (https://jira.hyperledger.org/browse/FABG-977).
+FABRIC_CRYPTOCONFIG_VER         ?= v$(FABRIC_PREV_VERSION_MAJOR)
 
 # Code level to exercise during unit tests
 FABRIC_CODELEVEL_UNITTEST_TAG ?= $(FABRIC_STABLE_CODELEVEL_TAG)
 FABRIC_CODELEVEL_UNITTEST_VER ?= $(FABRIC_STABLE_CODELEVEL_VER)
+
+# CC_MODE 
+CC_MODE_LIFECYCLE = lifecycle
+CC_MODE_LSCC = lscc
 
 # Local variables used by makefile
 PROJECT_NAME           := fabric-sdk-go
@@ -118,7 +123,7 @@ TEST_SCRIPTS_PATH      := test/scripts
 SOCAT_DOCKER_IMG       := $(shell docker images -q fabsdkgo-socat 2> /dev/null)
 
 # Tool commands
-MOCKGEN_CMD := gobin -run github.com/golang/mock/mockgen
+MOCKGEN_CMD := gobin -run github.com/golang/mock/mockgen@v1.4.3
 
 # Test fixture paths
 FIXTURE_SCRIPTS_PATH      := $(THIS_PATH)/test/scripts
@@ -152,7 +157,8 @@ FABRIC_TOOLS_DEVSTABLE_TAG  := stable
 ifdef JENKINS_URL
 export FABRIC_SDKGO_DEPEND_INSTALL=true
 FABRIC_SDK_CHAINCODED            := true
-FABRIC_SDKGO_TEST_CHANGED        := true
+# TODO: disabled FABRIC_SDKGO_TEST_CHANGED optimization - while tests are being fixed.
+FABRIC_SDKGO_TEST_CHANGED        := false
 FABRIC_SDK_DEPRECATED_UNITTEST   := false
 FABRIC_STABLE_INTTEST            := true
 FABRIC_STABLE_PKCS11_INTTEST     := true
@@ -261,44 +267,37 @@ license: version
 
 .PHONY: lint
 lint: version populate-noforce lint-submodules
-	@MODULE="github.com/hyperledger/fabric-sdk-go" PKG_ROOT="./pkg" LINT_CHANGED_ONLY=true GOLANGCI_LINT_VER=$(GOLANGCI_LINT_VER) $(TEST_SCRIPTS_PATH)/check_lint.sh
+	@MODULE="github.com/off-grid-block/fabric-sdk-go" PKG_ROOT="./pkg" LINT_CHANGED_ONLY=true GOLANGCI_LINT_VER=$(GOLANGCI_LINT_VER) $(TEST_SCRIPTS_PATH)/check_lint.sh
 
 .PHONY: lint-submodules
 lint-submodules: version populate-noforce
-	@MODULE="github.com/hyperledger/fabric-sdk-go/test/integration" LINT_CHANGED_ONLY=true GOLANGCI_LINT_VER=$(GOLANGCI_LINT_VER) $(TEST_SCRIPTS_PATH)/check_lint.sh
-	@MODULE="github.com/hyperledger/fabric-sdk-go/test/performance" LINT_CHANGED_ONLY=true GOLANGCI_LINT_VER=$(GOLANGCI_LINT_VER) $(TEST_SCRIPTS_PATH)/check_lint.sh
+	@MODULE="github.com/off-grid-block/fabric-sdk-go/test/integration" LINT_CHANGED_ONLY=true GOLANGCI_LINT_VER=$(GOLANGCI_LINT_VER) $(TEST_SCRIPTS_PATH)/check_lint.sh
+	@MODULE="github.com/off-grid-block/fabric-sdk-go/test/performance" LINT_CHANGED_ONLY=true GOLANGCI_LINT_VER=$(GOLANGCI_LINT_VER) $(TEST_SCRIPTS_PATH)/check_lint.sh
 
 .PHONY: lint-all
 lint-all: version populate-noforce
-	@MODULE="github.com/hyperledger/fabric-sdk-go" PKG_ROOT="./pkg" GOLANGCI_LINT_VER=$(GOLANGCI_LINT_VER) $(TEST_SCRIPTS_PATH)/check_lint.sh
-	@MODULE="github.com/hyperledger/fabric-sdk-go/test/integration" GOLANGCI_LINT_VER=$(GOLANGCI_LINT_VER) $(TEST_SCRIPTS_PATH)/check_lint.sh
-	@MODULE="github.com/hyperledger/fabric-sdk-go/test/performance" GOLANGCI_LINT_VER=$(GOLANGCI_LINT_VER) $(TEST_SCRIPTS_PATH)/check_lint.sh
+	@MODULE="github.com/off-grid-block/fabric-sdk-go" PKG_ROOT="./pkg" GOLANGCI_LINT_VER=$(GOLANGCI_LINT_VER) $(TEST_SCRIPTS_PATH)/check_lint.sh
+	@MODULE="github.com/off-grid-block/fabric-sdk-go/test/integration" GOLANGCI_LINT_VER=$(GOLANGCI_LINT_VER) $(TEST_SCRIPTS_PATH)/check_lint.sh
+	@MODULE="github.com/off-grid-block/fabric-sdk-go/test/performance" GOLANGCI_LINT_VER=$(GOLANGCI_LINT_VER) $(TEST_SCRIPTS_PATH)/check_lint.sh
 
 .PHONY: build-softhsm2-image
 build-softhsm2-image:
 	 @$(DOCKER_CMD) build --no-cache -q -t "fabsdkgo-softhsm2" \
-		--build-arg BASE_UBUNTU_VERSION=$(BASE_UBUNTU_VERSION) \
 		--build-arg BASE_GO_VERSION=$(BASE_GO_VERSION) \
 		-f $(FIXTURE_SOFTHSM2_PATH)/Dockerfile .
-
-.PHONY: build-socat-image
-build-socat-image:
-	 @$(DOCKER_CMD) build --no-cache -q -t "fabsdkgo-socat" \
-		--build-arg BASE_UBUNTU_VERSION=$(BASE_UBUNTU_VERSION) \
-		-f $(FIXTURE_SOCAT_PATH)/Dockerfile .
 
 .PHONY: unit-test
 unit-test: clean-tests depend-noforce populate-noforce license lint-submodules
 	@TEST_CHANGED_ONLY=$(FABRIC_SDKGO_TEST_CHANGED) TEST_WITH_LINTER=true FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_CODELEVEL_UNITTEST_TAG) FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_CODELEVEL_UNITTEST_VER) \
 	GO_TESTFLAGS="$(GO_TESTFLAGS_UNIT)" \
 	GOLANGCI_LINT_VER="$(GOLANGCI_LINT_VER)" \
-	MODULE="github.com/hyperledger/fabric-sdk-go" \
+	MODULE="github.com/off-grid-block/fabric-sdk-go" \
 	PKG_ROOT="./pkg" \
 	$(TEST_SCRIPTS_PATH)/unit.sh
 ifeq ($(FABRIC_SDK_DEPRECATED_UNITTEST),true)
 	@GO_TAGS="$(GO_TAGS) deprecated" TEST_CHANGED_ONLY=$(FABRIC_SDKGO_TEST_CHANGED) FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_CODELEVEL_UNITTEST_TAG) FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_CODELEVEL_UNITTEST_VER) \
 	GOLANGCI_LINT_VER="$(GOLANGCI_LINT_VER)" \
-	MODULE="github.com/hyperledger/fabric-sdk-go" \
+	MODULE="github.com/off-grid-block/fabric-sdk-go" \
 	PKG_ROOT="./pkg" \
 	$(TEST_SCRIPTS_PATH)/unit.sh
 endif
@@ -311,7 +310,7 @@ unit-tests-pkcs11: clean-tests depend-noforce populate-noforce license
 	@TEST_CHANGED_ONLY=$(FABRIC_SDKGO_TEST_CHANGED) TEST_WITH_LINTER=true FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_CODELEVEL_UNITTEST_TAG) FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_CODELEVEL_UNITTEST_VER) \
 	GO_TESTFLAGS="$(GO_TESTFLAGS_UNIT)" \
 	GOLANGCI_LINT_VER="$(GOLANGCI_LINT_VER)" \
-	MODULE="github.com/hyperledger/fabric-sdk-go" \
+	MODULE="github.com/off-grid-block/fabric-sdk-go" \
 	PKG_ROOT="./pkg" \
 	$(TEST_SCRIPTS_PATH)/unit-pkcs11.sh
 
@@ -321,17 +320,19 @@ integration-tests-stable: clean-tests depend-noforce populate-noforce
 	    . $(FIXTURE_CRYPTOCONFIG_PATH)/env.sh && \
 	    cd $(FIXTURE_DOCKERENV_PATH) && \
 		TEST_CHANGED_ONLY=$(FABRIC_SDKGO_TEST_CHANGED) FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_STABLE_CODELEVEL_VER) FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_STABLE_CODELEVEL_TAG) FABRIC_DOCKER_REGISTRY=$(FABRIC_RELEASE_REGISTRY) \
-		GO_TESTFLAGS="$(GO_TESTFLAGS_INTEGRATION)" \
+		FABRIC_FIXTURE_VERSION=v$(FABRIC_STABLE_VERSION_MINOR) FABRIC_CRYPTOCONFIG_VERSION=$(FABRIC_CRYPTOCONFIG_VER) \
+		GO_TESTFLAGS="$(GO_TESTFLAGS_INTEGRATION)" CC_MODE="$(CC_MODE_LIFECYCLE)"\
 		$(DOCKER_COMPOSE_CMD) $(BASE_DOCKER_COMPOSE_FILES) -f docker-compose-nopkcs11-test.yaml up $(DOCKER_COMPOSE_UP_TEST_FLAGS)
 	@cd $(FIXTURE_DOCKERENV_PATH) && FABRIC_DOCKER_REGISTRY=$(FABRIC_RELEASE_REGISTRY) $(FIXTURE_SCRIPTS_PATH)/check_status.sh "$(BASE_DOCKER_COMPOSE_FILES) -f ./docker-compose-nopkcs11-test.yaml"
 
 .PHONY: integration-tests-prev
-integration-tests-prev: clean-tests depend-noforce populate-noforce populate-fixtures-prev-noforce
+integration-tests-prev: clean-tests depend-noforce populate-fixtures-prev-noforce
 	@. $(FIXTURE_DOCKERENV_PATH)/prev-env.sh && \
 		. $(FIXTURE_CRYPTOCONFIG_PATH)/env.sh && \
 		cd $(FIXTURE_DOCKERENV_PATH) && \
 		TEST_CHANGED_ONLY=$(FABRIC_SDKGO_TEST_CHANGED) E2E_ONLY="false" FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_PREV_CODELEVEL_VER) FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_PREV_CODELEVEL_TAG) FABRIC_DOCKER_REGISTRY=$(FABRIC_RELEASE_REGISTRY) \
-		GO_TESTFLAGS="$(GO_TESTFLAGS_INTEGRATION)" \
+		FABRIC_FIXTURE_VERSION=v$(FABRIC_PREV_VERSION_MINOR) FABRIC_CRYPTOCONFIG_VERSION=$(FABRIC_CRYPTOCONFIG_VER) \
+		GO_TESTFLAGS="$(GO_TESTFLAGS_INTEGRATION)" CC_MODE="$(CC_MODE_LSCC)" \
 		$(DOCKER_COMPOSE_CMD) $(BASE_DOCKER_COMPOSE_FILES) -f docker-compose-nopkcs11-test.yaml up $(DOCKER_COMPOSE_UP_TEST_FLAGS)
 	@cd $(FIXTURE_DOCKERENV_PATH) && FABRIC_DOCKER_REGISTRY=$(FABRIC_RELEASE_REGISTRY) $(FIXTURE_SCRIPTS_PATH)/check_status.sh "$(BASE_DOCKER_COMPOSE_FILES) -f ./docker-compose-nopkcs11-test.yaml"
 
@@ -341,6 +342,7 @@ integration-tests-prerelease: clean-tests depend-noforce populate-noforce popula
 		. $(FIXTURE_CRYPTOCONFIG_PATH)/env.sh && \
 		cd $(FIXTURE_DOCKERENV_PATH) && \
 		TEST_CHANGED_ONLY=$(FABRIC_SDKGO_TEST_CHANGED) FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_PRERELEASE_CODELEVEL_VER) FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_PRERELEASE_CODELEVEL_TAG) FABRIC_DOCKER_REGISTRY=$(FABRIC_RELEASE_REGISTRY) \
+		FABRIC_FIXTURE_VERSION=v$(FABRIC_PRERELEASE_VERSION_MINOR) FABRIC_CRYPTOCONFIG_VERSION=$(FABRIC_CRYPTOCONFIG_VER) \
 		GO_TESTFLAGS="$(GO_TESTFLAGS_INTEGRATION)" \
 		$(DOCKER_COMPOSE_CMD) $(BASE_DOCKER_COMPOSE_FILES) -f docker-compose-nopkcs11-test.yaml up $(DOCKER_COMPOSE_UP_TEST_FLAGS)
 	@cd $(FIXTURE_DOCKERENV_PATH) && FABRIC_DOCKER_REGISTRY=$(FABRIC_RELEASE_REGISTRY) $(FIXTURE_SCRIPTS_PATH)/check_status.sh "$(BASE_DOCKER_COMPOSE_FILES) -f ./docker-compose-nopkcs11-test.yaml"
@@ -353,6 +355,7 @@ integration-tests-devstable: clean-tests depend-noforce populate-noforce populat
 		cd $(FIXTURE_DOCKERENV_PATH) && \
 		FABRIC_DOCKER_REGISTRY=$(FABRIC_DEV_REGISTRY) $(DOCKER_COMPOSE_CMD) $(BASE_DOCKER_COMPOSE_FILES) pull $(DOCKER_COMPOSE_PULL_FLAGS) && \
 		TEST_CHANGED_ONLY=$(FABRIC_SDKGO_TEST_CHANGED) FABRIC_FIXTURE_VERSION=v$(FABRIC_DEVSTABLE_VERSION_MINOR) FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_DEVSTABLE_CODELEVEL_VER) FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_DEVSTABLE_CODELEVEL_TAG) FABRIC_DOCKER_REGISTRY=$(FABRIC_DEV_REGISTRY) \
+		FABRIC_FIXTURE_VERSION=v$(FABRIC_DEVSTABLE_VERSION_MINOR) FABRIC_CRYPTOCONFIG_VERSION=$(FABRIC_CRYPTOCONFIG_VER) \
 		GO_TESTFLAGS="$(GO_TESTFLAGS_INTEGRATION)" \
 		$(DOCKER_COMPOSE_CMD) $(BASE_DOCKER_COMPOSE_FILES) -f docker-compose-nopkcs11-test.yaml up $(DOCKER_COMPOSE_UP_TEST_FLAGS)
 	@cd $(FIXTURE_DOCKERENV_PATH) && FABRIC_DOCKER_REGISTRY=$(FABRIC_DEV_REGISTRY) $(FIXTURE_SCRIPTS_PATH)/check_status.sh "$(BASE_DOCKER_COMPOSE_FILES) -f ./docker-compose-nopkcs11-test.yaml"
@@ -363,7 +366,8 @@ integration-tests-stable-negative: clean-tests depend-noforce populate-noforce
 	    . $(FIXTURE_CRYPTOCONFIG_PATH)/env.sh && \
 		cd $(FIXTURE_DOCKERENV_PATH) && \
 		TEST_CHANGED_ONLY=$(FABRIC_SDKGO_TEST_CHANGED) FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_STABLE_CODELEVEL_VER) FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_STABLE_CODELEVEL_TAG) FABRIC_DOCKER_REGISTRY=$(FABRIC_RELEASE_REGISTRY) \
-		GO_TESTFLAGS="$(GO_TESTFLAGS_INTEGRATION)" \
+		FABRIC_FIXTURE_VERSION=v$(FABRIC_STABLE_VERSION_MINOR) FABRIC_CRYPTOCONFIG_VERSION=$(FABRIC_CRYPTOCONFIG_VER) \
+		GO_TESTFLAGS="$(GO_TESTFLAGS_INTEGRATION)" CC_MODE="$(CC_MODE_LIFECYCLE)"\
 		$(DOCKER_COMPOSE_CMD) $(BASE_DOCKER_COMPOSE_FILES) -f docker-compose-negative.yaml up $(DOCKER_COMPOSE_UP_TEST_FLAGS)
 	@cd $(FIXTURE_DOCKERENV_PATH) && FABRIC_DOCKER_REGISTRY=$(FABRIC_RELEASE_REGISTRY) $(FIXTURE_SCRIPTS_PATH)/check_status.sh "$(BASE_DOCKER_COMPOSE_FILES) -f ./docker-compose-negative.yaml"
 
@@ -373,7 +377,8 @@ integration-tests-stable-pkcs11: clean-tests depend-noforce populate-noforce
 	    . $(FIXTURE_CRYPTOCONFIG_PATH)/env.sh && \
 		cd $(FIXTURE_DOCKERENV_PATH) && \
 		TEST_CHANGED_ONLY=$(FABRIC_SDKGO_TEST_CHANGED) FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_STABLE_CODELEVEL_VER) FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_STABLE_CODELEVEL_TAG) FABRIC_DOCKER_REGISTRY=$(FABRIC_RELEASE_REGISTRY) \
-		GO_TESTFLAGS="$(GO_TESTFLAGS_INTEGRATION)" \
+		FABRIC_FIXTURE_VERSION=v$(FABRIC_STABLE_VERSION_MINOR) FABRIC_CRYPTOCONFIG_VERSION=$(FABRIC_CRYPTOCONFIG_VER) \
+		GO_TESTFLAGS="$(GO_TESTFLAGS_INTEGRATION)" CC_MODE="$(CC_MODE_LIFECYCLE)"\
 		$(DOCKER_COMPOSE_CMD) $(BASE_DOCKER_COMPOSE_FILES) -f docker-compose-pkcs11-test.yaml up $(DOCKER_COMPOSE_UP_TEST_FLAGS)
 	@cd $(FIXTURE_DOCKERENV_PATH) && FABRIC_DOCKER_REGISTRY=$(FABRIC_RELEASE_REGISTRY) $(FIXTURE_SCRIPTS_PATH)/check_status.sh "$(BASE_DOCKER_COMPOSE_FILES) -f ./docker-compose-pkcs11-test.yaml"
 
@@ -387,6 +392,7 @@ integration-tests-devstable-nomutualtls: clean-tests depend-noforce populate-nof
 		cd $(FIXTURE_DOCKERENV_PATH) && \
 		FABRIC_DOCKER_REGISTRY=$(FABRIC_DEV_REGISTRY) $(DOCKER_COMPOSE_CMD) $(BASE_DOCKER_COMPOSE_FILES) pull $(DOCKER_COMPOSE_PULL_FLAGS) && \
 		TEST_CHANGED_ONLY=$(FABRIC_SDKGO_TEST_CHANGED) FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_DEVSTABLE_CODELEVEL_VER) FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_DEVSTABLE_CODELEVEL_TAG) FABRIC_DOCKER_REGISTRY=$(FABRIC_DEV_REGISTRY) \
+		FABRIC_FIXTURE_VERSION=v$(FABRIC_DEVSTABLE_VERSION_MINOR) FABRIC_CRYPTOCONFIG_VERSION=$(FABRIC_CRYPTOCONFIG_VER) \
 		GO_TESTFLAGS="$(GO_TESTFLAGS_INTEGRATION)" \
 		$(DOCKER_COMPOSE_CMD) $(BASE_DOCKER_COMPOSE_FILES) -f docker-compose-nopkcs11-test.yaml up $(DOCKER_COMPOSE_UP_TEST_FLAGS)
 	@cd $(FIXTURE_DOCKERENV_PATH) && FABRIC_DOCKER_REGISTRY=$(FABRIC_DEV_REGISTRY) $(FIXTURE_SCRIPTS_PATH)/check_status.sh "$(BASE_DOCKER_COMPOSE_FILES) -f ./docker-compose-nopkcs11-test.yaml"
@@ -443,7 +449,7 @@ integration-tests-stable-local: clean-tests-temp depend-noforce populate-noforce
 		FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_STABLE_CODELEVEL_VER) FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_STABLE_CODELEVEL_TAG) FABRIC_DOCKER_REGISTRY=$(FABRIC_RELEASE_REGISTRY) \
 		TEST_CHANGED_ONLY=$(FABRIC_SDKGO_TEST_CHANGED) GO_TESTFLAGS="$(GO_TESTFLAGS_INTEGRATION)" \
 		$(DOCKER_COMPOSE_CMD) $(BASE_DOCKER_COMPOSE_FILES) up $(DOCKER_COMPOSE_UP_BACKGROUND_FLAGS)
-	FABRIC_CRYPTOCONFIG_VERSION=$(FABRIC_CRYPTOCONFIG_VER) FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_CODELEVEL_VER) FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_CODELEVEL_TAG) TEST_LOCAL=true  $(TEST_SCRIPTS_PATH)/integration.sh
+	FABRIC_FIXTURE_VERSION=v$(FABRIC_STABLE_VERSION_MINOR) FABRIC_CRYPTOCONFIG_VERSION=$(FABRIC_CRYPTOCONFIG_VER) FABRIC_SDKGO_CODELEVEL_VER=$(FABRIC_CODELEVEL_VER) FABRIC_SDKGO_CODELEVEL_TAG=$(FABRIC_CODELEVEL_TAG) TEST_LOCAL=true  $(TEST_SCRIPTS_PATH)/integration.sh
 	@cd $(FIXTURE_DOCKERENV_PATH) && $(DOCKER_COMPOSE_CMD) $(BASE_DOCKER_COMPOSE_FILES) down
 
 .PHONY: integration-tests-devstable-local
@@ -505,12 +511,12 @@ dockerenv-latest-up: clean-tests populate-fixtures-devstable-noforce
 
 .PHONY: mock-gen
 mock-gen:
-	$(MOCKGEN_CMD) -build_flags '$(GO_LDFLAGS_ARG)' -package mockcore github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core CryptoSuiteConfig,ConfigBackend,Providers | sed "s/github.com\/hyperledger\/fabric-sdk-go\/vendor\///g" | goimports > pkg/common/providers/test/mockcore/mockcore.gen.go
-	$(MOCKGEN_CMD) -build_flags '$(GO_LDFLAGS_ARG)' -package mockmsp github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp IdentityConfig,IdentityManager,Providers | sed "s/github.com\/hyperledger\/fabric-sdk-go\/vendor\///g" | goimports > pkg/common/providers/test/mockmsp/mockmsp.gen.go
-	$(MOCKGEN_CMD) -build_flags '$(GO_LDFLAGS_ARG)' -package mockfab github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab EndpointConfig,ProposalProcessor,Providers | sed "s/github.com\/hyperledger\/fabric-sdk-go\/vendor\///g" | goimports > pkg/common/providers/test/mockfab/mockfab.gen.go
-	$(MOCKGEN_CMD) -build_flags '$(GO_LDFLAGS_ARG)' -package mockcontext github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context Providers,Client | sed "s/github.com\/hyperledger\/fabric-sdk-go\/vendor\///g" | goimports > pkg/common/providers/test/mockcontext/mockcontext.gen.go
-	$(MOCKGEN_CMD) -build_flags '$(GO_LDFLAGS_ARG)' -package mocksdkapi github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api CoreProviderFactory,MSPProviderFactory,ServiceProviderFactory | sed "s/github.com\/hyperledger\/fabric-sdk-go\/vendor\///g" | goimports > pkg/fabsdk/test/mocksdkapi/mocksdkapi.gen.go
-	$(MOCKGEN_CMD) -build_flags '$(GO_LDFLAGS_ARG)' -package mockmspapi github.com/hyperledger/fabric-sdk-go/pkg/msp/api CAClient | sed "s/github.com\/hyperledger\/fabric-sdk-go\/vendor\///g" | goimports > pkg/msp/test/mockmspapi/mockmspapi.gen.go
+	$(MOCKGEN_CMD) -build_flags '$(GO_LDFLAGS_ARG)' -package mockcore github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core CryptoSuiteConfig,ConfigBackend,Providers | sed "s/github.com\/hyperledger\/fabric-sdk-go\/vendor\///g" | goimports > pkg/common/providers/test/mockcore/mockcore.gen.go
+	$(MOCKGEN_CMD) -build_flags '$(GO_LDFLAGS_ARG)' -package mockmsp github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp IdentityConfig,IdentityManager,Providers | sed "s/github.com\/hyperledger\/fabric-sdk-go\/vendor\///g" | goimports > pkg/common/providers/test/mockmsp/mockmsp.gen.go
+	$(MOCKGEN_CMD) -build_flags '$(GO_LDFLAGS_ARG)' -package mockfab github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab EndpointConfig,ProposalProcessor,Providers | sed "s/github.com\/hyperledger\/fabric-sdk-go\/vendor\///g" | goimports > pkg/common/providers/test/mockfab/mockfab.gen.go
+	$(MOCKGEN_CMD) -build_flags '$(GO_LDFLAGS_ARG)' -package mockcontext github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context Providers,Client | sed "s/github.com\/hyperledger\/fabric-sdk-go\/vendor\///g" | goimports > pkg/common/providers/test/mockcontext/mockcontext.gen.go
+	$(MOCKGEN_CMD) -build_flags '$(GO_LDFLAGS_ARG)' -package mocksdkapi github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk/api CoreProviderFactory,MSPProviderFactory,ServiceProviderFactory | sed "s/github.com\/hyperledger\/fabric-sdk-go\/vendor\///g" | goimports > pkg/fabsdk/test/mocksdkapi/mocksdkapi.gen.go
+	$(MOCKGEN_CMD) -build_flags '$(GO_LDFLAGS_ARG)' -package mockmspapi github.com/off-grid-block/fabric-sdk-go/pkg/msp/api CAClient | sed "s/github.com\/hyperledger\/fabric-sdk-go\/vendor\///g" | goimports > pkg/msp/test/mockmspapi/mockmspapi.gen.go
 
 .PHONY: crypto-gen
 crypto-gen:
@@ -571,8 +577,11 @@ endif
 .PHONY: thirdparty-pin
 thirdparty-pin:
 	@echo "Pinning third party packages ..."
-	@UPSTREAM_COMMIT=$(THIRDPARTY_FABRIC_COMMIT) UPSTREAM_BRANCH=$(THIRDPARTY_FABRIC_BRANCH) scripts/third_party_pins/fabric/apply_upstream.sh
-	@UPSTREAM_COMMIT=$(THIRDPARTY_FABRIC_CA_COMMIT) UPSTREAM_BRANCH=$(THIRDPARTY_FABRIC_CA_BRANCH) scripts/third_party_pins/fabric-ca/apply_upstream.sh
+	@THIRDPARTY_FABRIC_COMMIT=$(THIRDPARTY_FABRIC_COMMIT) \
+	THIRDPARTY_FABRIC_BRANCH=$(THIRDPARTY_FABRIC_BRANCH) \
+	THIRDPARTY_FABRIC_CA_COMMIT=$(THIRDPARTY_FABRIC_CA_COMMIT) \
+	THIRDPARTY_FABRIC_CA_BRANCH=$(THIRDPARTY_FABRIC_CA_BRANCH) \
+	scripts/third_party_pins/apply_thirdparty_pins.sh
 
 .PHONY: populate
 populate: populate-vendor populate-fixtures-stable
@@ -580,6 +589,11 @@ populate: populate-vendor populate-fixtures-stable
 .PHONY: populate-vendor
 populate-vendor:
 	@go mod vendor
+
+.PHONY: populate-chaincode-vendor
+populate-chaincode-vendor:
+	@cd test/fixtures/testdata/go/src/github.com/example_cc && go mod vendor
+	@cd test/fixtures/testdata/go/src/github.com/example_pvt_cc && go mod vendor
 
 .PHONY: populate-fixtures-stable
 populate-fixtures-stable:
@@ -621,7 +635,7 @@ populate-fixtures-devstable-noforce:
 
 
 .PHONY: clean
-clean: clean-tests clean-fixtures clean-cache clean-populate
+clean: clean-tests clean-fixtures clean-cache clean-populate clean-chaincode-vendor
 
 .PHONY: clean-populate
 clean-populate:
@@ -645,6 +659,11 @@ clean-depend-images: clean-tests
 clean-fixtures:
 	-rm -Rf test/fixtures/fabric/*/crypto-config
 	-rm -Rf test/fixtures/fabric/*/channel
+
+.PHONY: clean-chaincode-vendor
+clean-chaincode-vendor:
+	-rm -Rf test/fixtures/testdata/go/src/github.com/example_cc/vendor
+	-rm -Rf test/fixtures/testdata/go/src/github.com/example_pvt_cc/vendor
 
 .PHONY: clean-tests-build
 clean-tests-build:

@@ -21,14 +21,12 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-
-	"github.com/off-grid-block/fabric-sdk-go/pkg/util/protolator"
-
-	"github.com/off-grid-block/fabric-sdk-go/pkg/util/test"
-
-	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/resource"
-
+	"github.com/hyperledger/fabric-config/protolator"
 	"github.com/off-grid-block/fabric-protos-go/common"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/keyutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp/utils"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/client/channel"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/client/common/discovery/dynamicdiscovery"
@@ -43,12 +41,13 @@ import (
 	"github.com/off-grid-block/fabric-sdk-go/pkg/core/config/lookup"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/core/mocks"
 	fabImpl "github.com/off-grid-block/fabric-sdk-go/pkg/fab"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/fab/resource"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/fabsdk/provider/chpvdr"
+	"github.com/off-grid-block/fabric-sdk-go/pkg/util/test"
 	"github.com/off-grid-block/fabric-sdk-go/test/integration"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/off-grid-block/fabric-sdk-go/test/metadata"
 )
 
 const (
@@ -85,13 +84,14 @@ func DistributedSignaturesTests(t *testing.T, exampleCC string) {
 
 	org2ClCtx := createDSClientCtx(t, org2)
 	defer org2ClCtx.sdk.Close()
-
+	ccID1 := integration.GenerateExampleID(true)
 	// use SDK signing
-	e2eCreateAndQueryChannel(t, ordererClCtx, org1ClCtx, org2ClCtx, dsChannelSDK, exampleCC)
+	e2eCreateAndQueryChannel(t, ordererClCtx, org1ClCtx, org2ClCtx, dsChannelSDK, ccID1)
 
 	if isOpensslAvailable(t) {
+		ccID2 := integration.GenerateExampleID(true)
 		// use OpenSSL signing
-		e2eCreateAndQueryChannel(t, ordererClCtx, org1ClCtx, org2ClCtx, dsChannelExternal, exampleCC)
+		e2eCreateAndQueryChannel(t, ordererClCtx, org1ClCtx, org2ClCtx, dsChannelExternal, ccID2)
 	}
 
 	// modify channel config, must be endorsed by two orgs
@@ -303,19 +303,37 @@ func e2eCreateAndQueryChannel(t *testing.T, ordererClCtx, org1ClCtx, org2ClCtx *
 	require.NoError(t, err)
 
 	ccVersion := "1" // ccVersion= 1 because previous test increased the ccVersion # on the peers.
+	if metadata.CCMode == "lscc" {
+		// instantiate example_CC on dschannel
+		instantiateCC(t, org1ClCtx.rsCl, examplecc, ccVersion, channelID)
 
-	// instantiate example_CC on dschannel
-	instantiateCC(t, org1ClCtx.rsCl, exampleCC, ccVersion, channelID)
+		// Ensure the CC is instantiated on all peers in both orgs
+		found := queryInstantiatedCC(t, org1, org1ClCtx.rsCl, channelID, examplecc, ccVersion, org1Peers)
+		require.True(t, found, "Failed to find instantiated chaincode [%s:%s] in at least one peer in Org1 on channel [%s]", examplecc, ccVersion, channelID)
 
-	// Ensure the CC is instantiated on all peers in both orgs
-	found := queryInstantiatedCC(t, org1, org1ClCtx.rsCl, channelID, exampleCC, ccVersion, org1Peers)
-	require.True(t, found, "Failed to find instantiated chaincode [%s:%s] in at least one peer in Org1 on channel [%s]", exampleCC, ccVersion, channelID)
-
-	found = queryInstantiatedCC(t, org2, org2ClCtx.rsCl, channelID, exampleCC, ccVersion, org2Peers)
-	require.True(t, found, "Failed to find instantiated chaincode [%s:%s] in at least one peer in Org2 on channel [%s]", exampleCC, ccVersion, channelID)
-
-	// test regular querying on dschannel from org1 and org2
-	testQueryingOrgs(t, org1ClCtx.sdk, org2ClCtx.sdk, channelID, examplecc)
+		found = queryInstantiatedCC(t, org2, org2ClCtx.rsCl, channelID, examplecc, ccVersion, org2Peers)
+		require.True(t, found, "Failed to find instantiated chaincode [%s:%s] in at least one peer in Org2 on channel [%s]", examplecc, ccVersion, channelID)
+		// test regular querying on dschannel from org1 and org2
+		testQueryingOrgs(t, org1ClCtx.sdk, org2ClCtx.sdk, channelID, examplecc)
+	} else {
+		// TODO: dsChannelExternal needs to be complete
+		if channelID == dsChannelSDK {
+			mc := &multiorgContext{
+				// client contexts
+				ordererClientContext:   ordererClCtx.clCtx,
+				org1AdminClientContext: org1ClCtx.clCtx,
+				org2AdminClientContext: org2ClCtx.clCtx,
+				org1ResMgmt:            org1ClCtx.rsCl,
+				org2ResMgmt:            org2ClCtx.rsCl,
+				ccName:                 examplecc,
+				ccVersion:              ccVersion,
+				channelID:              channelID,
+			}
+			createCCLifecycle(t, mc, examplecc, ccVersion, 1, true, channelID, org1ClCtx.sdk)
+			// test regular querying on dschannel from org1 and org2
+			testQueryingOrgs(t, org1ClCtx.sdk, org2ClCtx.sdk, channelID, examplecc)
+		}
+	}
 }
 
 func generateSignatures(t *testing.T, org1ClCtx, org2ClCtx *dsClientCtx, chConfigPath, chConfigOrg1MSPPath, chConfigOrg2MSPPath, sigDir string, isSDKSigning bool) chCfgSignatures {
@@ -764,7 +782,7 @@ func loadPrivateKey(t *testing.T, path string) interface{} {
 	raw, err := ioutil.ReadFile(path)
 	require.NoError(t, err, "Failed to read PK @ '%s'", path)
 
-	key, err := utils.PEMtoPrivateKey(raw, []byte(""))
+	key, err := keyutil.PEMToPrivateKey(raw, []byte(""))
 	require.NoError(t, err, "Failed to convert PEM data to PK")
 
 	return key

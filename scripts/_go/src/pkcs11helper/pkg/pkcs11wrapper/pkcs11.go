@@ -9,8 +9,8 @@ import (
 	"crypto/elliptic"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 
 	"github.com/miekg/pkcs11"
@@ -236,7 +236,11 @@ func (p11w *Pkcs11Wrapper) ImportECKey(ec EcdsaKey) (err error) {
 		return
 	}
 
-	ec.GenSKI()
+	err = ec.GenSKI()
+	if err != nil {
+		err = errors.Wrap(err, "failed to generate SKI")
+		return
+	}
 
 	marshaledOID, err := GetECParamMarshaled(ec.PrivKey.Params().Name)
 	if err != nil {
@@ -309,7 +313,6 @@ func (p11w *Pkcs11Wrapper) ImportECKeyFromFile(file string) (err error) {
 
 func (p11w *Pkcs11Wrapper) SignMessage(message string, key pkcs11.ObjectHandle) (signature string, err error) {
 
-	// TODO: diff mech needed for rsa. example: CKM_RSA_PKCS CKM_ECDSA
 	err = p11w.Context.SignInit(p11w.Session, []*pkcs11.Mechanism{pkcs11.NewMechanism(pkcs11.CKM_ECDSA, nil)}, key)
 	if err != nil {
 		return

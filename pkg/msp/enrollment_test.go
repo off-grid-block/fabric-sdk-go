@@ -13,7 +13,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/util"
+	"github.com/off-grid-block/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkinternal/pkg/util"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
 	providersFab "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"

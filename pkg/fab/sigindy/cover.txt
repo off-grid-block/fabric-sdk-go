@@ -1,8 +1,0 @@
-mode: set
-github.com/hyperledger/fabric-sdk-go/pkg/fab/sigindy/sigindy.go:21.88,24.22 2 1
-github.com/hyperledger/fabric-sdk-go/pkg/fab/sigindy/sigindy.go:27.2,27.15 1 1
-github.com/hyperledger/fabric-sdk-go/pkg/fab/sigindy/sigindy.go:30.2,30.20 1 1
-github.com/hyperledger/fabric-sdk-go/pkg/fab/sigindy/sigindy.go:35.2,46.20 12 1
-github.com/hyperledger/fabric-sdk-go/pkg/fab/sigindy/sigindy.go:24.22,26.3 1 1
-github.com/hyperledger/fabric-sdk-go/pkg/fab/sigindy/sigindy.go:27.15,29.3 1 1
-github.com/hyperledger/fabric-sdk-go/pkg/fab/sigindy/sigindy.go:30.20,32.3 1 1

@@ -8,9 +8,9 @@
 
 set -e
 
-FABRIC_SDKGO_CODELEVEL_TAG="${FABRIC_SDKGO_CODELEVEL_TAG:-stable}"
-FABRIC_CRYPTOCONFIG_VERSION="${FABRIC_CRYPTOCONFIG_VERSION:-v1}"
-FABRIC_FIXTURE_VERSION="${FABRIC_FIXTURE_VERSION:-v1.2}"
+FABRIC_SDKGO_CODELEVEL_TAG="${FABRIC_SDKGO_CODELEVEL_TAG:-unknown}"
+FABRIC_CRYPTOCONFIG_VERSION="${FABRIC_CRYPTOCONFIG_VERSION:-unknown}"
+FABRIC_FIXTURE_VERSION="${FABRIC_FIXTURE_VERSION:-unknown}"
 LASTRUN_CHANNEL_INFO_FILENAME="populate-fixtures-${FABRIC_FIXTURE_VERSION}.txt"
 LASTRUN_CRYPTO_INFO_FILENAME="populate-fixtures-${FABRIC_CRYPTOCONFIG_VERSION}.txt"
 FIXTURES_CHANNEL_TREE_FILENAME="fixtures-channel-tree-${FABRIC_FIXTURE_VERSION}.txt"
@@ -143,7 +143,14 @@ function generateChannelConfig {
         make channel-config-prerelease-gen
     elif [ "${FABRIC_SDKGO_CODELEVEL_TAG}" = "devstable" ]; then
         make channel-config-devstable-gen
+    else
+        echo "unknown channel config codelevel tag"
     fi
+}
+
+function vendorChaincode {
+    echo "Populating vendor for test chaincode ..."
+    make populate-chaincode-vendor
 }
 
 setCachePath
@@ -161,3 +168,5 @@ if ! isPopulateChannelCurrent || isForceMode; then
 else
     echo "No need to populate channel fixtures"
 fi
+
+vendorChaincode

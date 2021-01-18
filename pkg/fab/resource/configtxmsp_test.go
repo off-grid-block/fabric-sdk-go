@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 
 	"github.com/off-grid-block/fabric-sdk-go/test/metadata"
 

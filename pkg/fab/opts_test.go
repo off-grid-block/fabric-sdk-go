@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/fab"
+	commtls "github.com/off-grid-block/fabric-sdk-go/pkg/core/config/comm/tls"
 )
 
 var (
@@ -236,8 +237,8 @@ func (m *mockrderersConfig) OrderersConfig() []fab.OrdererConfig {
 
 type mockOrdererConfig struct{}
 
-func (m *mockOrdererConfig) OrdererConfig(name string) (*fab.OrdererConfig, bool) {
-	return &fab.OrdererConfig{URL: "o.com", GRPCOptions: nil, TLSCACert: nil}, true
+func (m *mockOrdererConfig) OrdererConfig(name string) (*fab.OrdererConfig, bool, bool) {
+	return &fab.OrdererConfig{URL: "o.com", GRPCOptions: nil, TLSCACert: nil}, true, false
 }
 
 type mockPeersConfig struct{}
@@ -284,7 +285,7 @@ func (m *mockChannelOrderers) ChannelOrderers(name string) []fab.OrdererConfig {
 
 type mockTLSCACertPool struct{}
 
-func (m *mockTLSCACertPool) TLSCACertPool() fab.CertPool {
+func (m *mockTLSCACertPool) TLSCACertPool() commtls.CertPool {
 	return nil
 }
 

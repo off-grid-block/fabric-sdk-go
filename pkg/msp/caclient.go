@@ -8,15 +8,14 @@ package msp
 
 import (
 	"fmt"
-	"github.com/off-grid-block/controller"
+	"strings"
+
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/logging"
 	contextApi "github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/off-grid-block/fabric-sdk-go/pkg/msp/api"
 	"github.com/pkg/errors"
-	"os"
-	"strings"
 )
 
 var logger = logging.NewLogger("fabsdk/msp")
@@ -135,46 +134,16 @@ func (c *CAClientImpl) Enroll(request *api.EnrollmentRequest) error {
 	if request.Secret == "" {
 		return errors.New("enrollmentSecret is required")
 	}
-	// var result map[string]interface{}
-	// //Indy part
-	// url := os.Getenv("CLIENT_AGENT_URL") + "/get_signing_did"
-
-	// req, _ := http.NewRequest("GET", url, nil)
-	// req.Header.Add("content-type", "text/plain")
-	// res, err := http.DefaultClient.Do(req)
-	// if err != nil {
-	// 	return fmt.Errorf("Failed to get signing did: %v", err)
-	// }
-	// if res == nil {
-	// 	return errors.New("Request failed")
-	// }
-
-	// json.NewDecoder(res.Body).Decode(&result)
-	// defer res.Body.Close()
-	// new_did := fmt.Sprintf("%v", result["signing_did"])
-
-	agentUrl := os.Getenv("CLIENT_AGENT_URL")
-	if agentUrl == "" {
-		return errors.New("client agent URL env variable is empty")
-	}
-
-	cc, _ := controller.NewClientController("client", agentUrl)
-	err := cc.CreateSigningDid()
+	// TODO add attributes
+	cert, err := c.adapter.Enroll(request)
 	if err != nil {
-		return errors.Wrap(err, "failed to create signing DID")
+		return errors.Wrap(err, "enroll failed")
 	}
-
-	err = controller.PutKeyToLedger(cc, cc.SigningDid, cc.SigningVk)
-	if err != nil {
-		return errors.Wrap(err, "failed to put key on indy ledger")
-	}
-
 	userData := &msp.UserData{
-		MSPID:                 "Org1MSP",
+		MSPID:                 c.orgMSPID,
 		ID:                    request.Name,
-		EnrollmentCertificate: []byte(cc.SigningDid),
+		EnrollmentCertificate: cert,
 	}
-
 	err = c.userStore.Store(userData)
 	if err != nil {
 		return errors.Wrap(err, "enroll failed")
@@ -199,9 +168,9 @@ func (c *CAClientImpl) CreateIdentity(request *api.IdentityRequest) (*api.Identi
 		return nil, errors.New("must provide identity request")
 	}
 
-	// Checke required parameters (ID and affiliation)
-	if request.ID == "" || request.Affiliation == "" {
-		return nil, errors.New("ID and affiliation are required")
+	// Check required parameters (ID)
+	if request.ID == "" {
+		return nil, errors.New("ID is required")
 	}
 
 	registrar, err := c.getRegistrar(c.registrar.EnrollID, c.registrar.EnrollSecret)
@@ -228,9 +197,9 @@ func (c *CAClientImpl) ModifyIdentity(request *api.IdentityRequest) (*api.Identi
 		return nil, errors.New("must provide identity request")
 	}
 
-	// Checke required parameters (ID and affiliation)
-	if request.ID == "" || request.Affiliation == "" {
-		return nil, errors.New("ID and affiliation are required")
+	// Check required parameters (ID)
+	if request.ID == "" {
+		return nil, errors.New("ID is required")
 	}
 
 	registrar, err := c.getRegistrar(c.registrar.EnrollID, c.registrar.EnrollSecret)
@@ -257,7 +226,7 @@ func (c *CAClientImpl) RemoveIdentity(request *api.RemoveIdentityRequest) (*api.
 		return nil, errors.New("must provide remove identity request")
 	}
 
-	// Checke required parameters (ID)
+	// Check required parameters (ID)
 	if request.ID == "" {
 		return nil, errors.New("ID is required")
 	}
@@ -283,7 +252,7 @@ func (c *CAClientImpl) GetIdentity(id, caname string) (*api.IdentityResponse, er
 		return nil, fmt.Errorf("no CAs configured for organization: %s", c.orgName)
 	}
 
-	// Checke required parameters (ID and affiliation)
+	// Check required parameters (ID and affiliation)
 	if id == "" {
 		return nil, errors.New("id is required")
 	}
@@ -364,16 +333,18 @@ func (c *CAClientImpl) Register(request *api.RegistrationRequest) (string, error
 	if request.Name == "" {
 		return "", errors.New("request.Name is required")
 	}
-	_, err := c.getRegistrar(request.Name, request.Secret)
+
+	registrar, err := c.getRegistrar(c.registrar.EnrollID, c.registrar.EnrollSecret)
 	if err != nil {
 		return "", err
 	}
-	// secret, err := c.adapter.Register(registrar.PrivateKey(), registrar.EnrollmentCertificate(), request)
-	// if err != nil {
-	// 	return "", errors.Wrap(err, "failed to register user")
-	// }
 
-	return "secret", nil
+	secret, err := c.adapter.Register(registrar.PrivateKey(), registrar.EnrollmentCertificate(), request)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to register user")
+	}
+
+	return secret, nil
 }
 
 // Revoke a User with the Fabric CA
@@ -418,7 +389,7 @@ func (c *CAClientImpl) GetAffiliation(affiliation, caname string) (*api.Affiliat
 		return nil, fmt.Errorf("no CAs configured for organization: %s", c.orgName)
 	}
 
-	// Checke required parameters (affiliation)
+	// Check required parameters (affiliation)
 	if affiliation == "" {
 		return nil, errors.New("affiliation is required")
 	}
@@ -455,7 +426,7 @@ func (c *CAClientImpl) AddAffiliation(request *api.AffiliationRequest) (*api.Aff
 		return nil, errors.New("must provide affiliation request")
 	}
 
-	// Checke required parameters (Name)
+	// Check required parameters (Name)
 	if request.Name == "" {
 		return nil, errors.New("Name is required")
 	}
@@ -478,7 +449,7 @@ func (c *CAClientImpl) ModifyAffiliation(request *api.ModifyAffiliationRequest) 
 		return nil, errors.New("must provide affiliation request")
 	}
 
-	// Checke required parameters (Name and NewName)
+	// Check required parameters (Name and NewName)
 	if request.Name == "" || request.NewName == "" {
 		return nil, errors.New("Name and NewName are required")
 	}
@@ -501,7 +472,7 @@ func (c *CAClientImpl) RemoveAffiliation(request *api.AffiliationRequest) (*api.
 		return nil, errors.New("must provide remove affiliation request")
 	}
 
-	// Checke required parameters (Name)
+	// Check required parameters (Name)
 	if request.Name == "" {
 		return nil, errors.New("Name is required")
 	}
@@ -520,7 +491,7 @@ func (c *CAClientImpl) getRegistrar(enrollID string, enrollSecret string) (msp.S
 		return nil, api.ErrCARegistrarNotFound
 	}
 
-	_, err := c.identityManager.GetSigningIdentity(enrollID)
+	registrar, err := c.identityManager.GetSigningIdentity(enrollID)
 	if err != nil {
 		if err != msp.ErrUserNotFound {
 			return nil, err
@@ -534,10 +505,10 @@ func (c *CAClientImpl) getRegistrar(enrollID string, enrollSecret string) (msp.S
 		if err != nil {
 			return nil, err
 		}
-		// registrar, err = c.identityManager.GetSigningIdentity(enrollID)
-		// if err != nil {
-		// 	return nil, err
-		// }
+		registrar, err = c.identityManager.GetSigningIdentity(enrollID)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return nil, nil
+	return registrar, nil
 }
