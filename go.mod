@@ -17,7 +17,7 @@ require (
 	github.com/miekg/pkcs11 v1.0.3
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/off-grid-block/controller v0.0.0-20201210205413-9b78d59d7063 // indirect
-	github.com/off-grid-block/fabric-protos-go v0.0.0-20200929182751-c59fe09a026b
+	github.com/off-grid-block/fabric-protos-go v0.0.0-20210127185419-d8041a97c197
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.1.0

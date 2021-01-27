@@ -118,6 +118,8 @@ github.com/off-grid-block/fabric-protos-go v0.0.0-20200707132912-fee30f3ccd23 h1
 github.com/off-grid-block/fabric-protos-go v0.0.0-20200707132912-fee30f3ccd23/go.mod h1:xVYTjK4DtZRBxZ2D9aE4y6AbLaPwue2o/criQyQbVD0=
 github.com/off-grid-block/fabric-protos-go v0.0.0-20200929182751-c59fe09a026b h1:rauBOa0/sIUt9MBr2/mrpc/8mj5HkENkSPJGypFZkDc=
 github.com/off-grid-block/fabric-protos-go v0.0.0-20200929182751-c59fe09a026b/go.mod h1:3v3u/cK7uRltroeV0BibcaZEYqhALVeQ0W5iZxNfcB8=
+github.com/off-grid-block/fabric-protos-go v0.0.0-20210127185419-d8041a97c197 h1:DBY517PdJkXWekYS4U2yOlc4OZkKnVWGB3GAooizuic=
+github.com/off-grid-block/fabric-protos-go v0.0.0-20210127185419-d8041a97c197/go.mod h1:3v3u/cK7uRltroeV0BibcaZEYqhALVeQ0W5iZxNfcB8=
 github.com/off-grid-block/fabric-sdk-go v1.0.0-rc1 h1:cfDo/5ovUZf2dCz08fznUxxVYEWAT4yKJcAh9b+K9Mk=
 github.com/off-grid-block/fabric-sdk-go v1.0.0-rc1/go.mod h1:qWE9Syfg1KbwNjtILk70bJLilnmCvllIYFCSY/pa1RU=
 github.com/onsi/ginkgo v1.6.0 h1:Ix8l273rp3QzYgXSR+c8d1fTG7UPgYkOSELPhiY/YGw=
